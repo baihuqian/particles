@@ -18,7 +18,7 @@ class ParticleRenderer
         ParticleRenderer();
         ~ParticleRenderer();
 
-        void setPositions(float *pos, int numParticles);
+        //void setPositions(float *pos, int numParticles);
         void setVertexBuffer(unsigned int vbo, int numParticles);
         void setColorBuffer(unsigned int vbo)
         {

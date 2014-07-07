@@ -38,13 +38,13 @@ ParticleRenderer::~ParticleRenderer()
 {
     m_pos = 0;
 }
-
+/*
 void ParticleRenderer::setPositions(float *pos, int numParticles)
 {
     m_pos = pos;
     m_numParticles = numParticles;
 }
-
+*/
 void ParticleRenderer::setVertexBuffer(unsigned int vbo, int numParticles)
 {
     m_vbo = vbo;
@@ -53,6 +53,7 @@ void ParticleRenderer::setVertexBuffer(unsigned int vbo, int numParticles)
 
 void ParticleRenderer::_drawPoints()
 {
+	/*
     if (!m_vbo)
     {
         glBegin(GL_POINTS);
@@ -68,7 +69,7 @@ void ParticleRenderer::_drawPoints()
         glEnd();
     }
     else
-    {
+    {*/
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, m_vbo);
         glVertexPointer(4, GL_FLOAT, 0, 0);
         glEnableClientState(GL_VERTEX_ARRAY);
@@ -85,10 +86,10 @@ void ParticleRenderer::_drawPoints()
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         glDisableClientState(GL_VERTEX_ARRAY);
         glDisableClientState(GL_COLOR_ARRAY);
-    }
+    //}
 }
 
-void ParticleRenderer::display(DisplayMode mode /* = PARTICLE_POINTS */)
+void ParticleRenderer::display(DisplayMode mode /* = PARTICLE_POINTS */) // called in particles.cpp -> display()
 {
     switch (mode)
     {
