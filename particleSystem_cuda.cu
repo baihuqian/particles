@@ -142,15 +142,17 @@ extern "C"
 
     void integrateSystem(float *pos,
                          float *vel,
+                         float *rad,
                          float deltaTime,
                          uint numParticles)
     {
         thrust::device_ptr<float4> d_pos4((float4 *)pos);
         thrust::device_ptr<float4> d_vel4((float4 *)vel);
+        thrust::device_ptr<float>  d_rad(rad);
 
         thrust::for_each(
-            thrust::make_zip_iterator(thrust::make_tuple(d_pos4, d_vel4)),
-            thrust::make_zip_iterator(thrust::make_tuple(d_pos4+numParticles, d_vel4+numParticles)),
+            thrust::make_zip_iterator(thrust::make_tuple(d_pos4, d_vel4, d_rad)),
+            thrust::make_zip_iterator(thrust::make_tuple(d_pos4+numParticles, d_vel4+numParticles, d_rad+numParticles)),
             integrate_functor(deltaTime));
     }
 

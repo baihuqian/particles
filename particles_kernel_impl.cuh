@@ -22,15 +22,8 @@
 #include "math_constants.h"
 #include "particles_kernel.cuh"
 
-#if USE_TEX
-// textures for particle position and velocity
-texture<float4, 1, cudaReadModeElementType> oldPosTex;
-texture<float4, 1, cudaReadModeElementType> oldVelTex;
+#define GROWTH_RATE 1.001
 
-texture<uint, 1, cudaReadModeElementType> gridParticleHashTex;
-texture<uint, 1, cudaReadModeElementType> cellStartTex;
-texture<uint, 1, cudaReadModeElementType> cellEndTex;
-#endif
 
 // simulation parameters in constant memory
 __constant__ SimParams params;
@@ -49,6 +42,8 @@ struct integrate_functor
     {
         volatile float4 posData = thrust::get<0>(t);
         volatile float4 velData = thrust::get<1>(t);
+
+        float  rad = thrust::get<2>(t);
         float3 pos = make_float3(posData.x, posData.y, posData.z);
         float3 vel = make_float3(velData.x, velData.y, velData.z);
 
@@ -61,41 +56,41 @@ struct integrate_functor
         // set this to zero to disable collisions with cube sides
 #if 1
 
-        if (pos.x > 1.0f - params.particleRadius)
+        if (pos.x > 1.0f - rad)
         {
-            pos.x = 1.0f - params.particleRadius;
+            pos.x = 1.0f - rad;
             vel.x *= params.boundaryDamping;
         }
 
-        if (pos.x < -1.0f + params.particleRadius)
+        if (pos.x < -1.0f + rad)
         {
-            pos.x = -1.0f + params.particleRadius;
+            pos.x = -1.0f + rad;
             vel.x *= params.boundaryDamping;
         }
 
-        if (pos.y > 1.0f - params.particleRadius)
+        if (pos.y > 1.0f - rad)
         {
-            pos.y = 1.0f - params.particleRadius;
+            pos.y = 1.0f - rad;
             vel.y *= params.boundaryDamping;
         }
 
-        if (pos.z > 1.0f - params.particleRadius)
+        if (pos.z > 1.0f - rad)
         {
-            pos.z = 1.0f - params.particleRadius;
+            pos.z = 1.0f - rad;
             vel.z *= params.boundaryDamping;
         }
 
-        if (pos.z < -1.0f + params.particleRadius)
+        if (pos.z < -1.0f + rad)
         {
-            pos.z = -1.0f + params.particleRadius;
+            pos.z = -1.0f + rad;
             vel.z *= params.boundaryDamping;
         }
 
 #endif
 
-        if (pos.y < -1.0f + params.particleRadius)
+        if (pos.y < -1.0f + rad)
         {
-            pos.y = -1.0f + params.particleRadius;
+            pos.y = -1.0f + rad;
             vel.y *= params.boundaryDamping;
         }
 
@@ -340,7 +335,7 @@ void collideD(float4 *newVel,               // output: new velocity
     }
 
     // collide with cursor sphere
-    force += collideSpheres(pos, params.colliderPos, vel, make_float3(0.0f, 0.0f, 0.0f), params.particleRadius, params.colliderRadius, 0.0f);
+    force += collideSpheres(pos, params.colliderPos, vel, make_float3(0.0f, 0.0f, 0.0f), rad, params.colliderRadius, 0.0f);
 
     // write new velocity back to original unsorted location
     uint originalIndex = gridParticleIndex[index];
@@ -353,7 +348,7 @@ void changeRadiusD(float *radius, uint numParticles)
 	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
 
 	if (index >= numParticles) return;
-	radius[index] *= 10; // change later
+	radius[index] *= GROWTH_RATE; // change later
 }
 
 #endif

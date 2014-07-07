@@ -38,6 +38,7 @@ class ParticleSystem
         {
             POSITION,
             VELOCITY,
+            RADIUS,
         };
 
         void update(float deltaTime);
@@ -151,6 +152,7 @@ class ParticleSystem
         // CPU data
         float *m_hPos;              // particle positions
         float *m_hVel;              // particle velocities
+        float *m_hRad;
 
         uint  *m_hParticleHash;
         uint  *m_hCellStart;
@@ -159,6 +161,7 @@ class ParticleSystem
         // GPU data
         float *m_dPos;
         float *m_dVel;
+        float *m_dRad;
 
         float *m_dSortedPos;
         float *m_dSortedVel;

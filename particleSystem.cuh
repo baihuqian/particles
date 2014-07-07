@@ -30,6 +30,7 @@ extern "C"
 
     void integrateSystem(float *pos,
                          float *vel,
+                         float *rad,
                          float deltaTime,
                          uint numParticles);
 
