@@ -153,10 +153,12 @@ void reorderDataAndFindCellStartD(uint   *cellStart,        // output: cell star
                                   uint   *cellEnd,          // output: cell end index
                                   float4 *sortedPos,        // output: sorted positions
                                   float4 *sortedVel,        // output: sorted velocities
+                                  float  *sortedRad,		// output:
                                   uint   *gridParticleHash, // input: sorted grid hashes
                                   uint   *gridParticleIndex,// input: sorted particle indices
                                   float4 *oldPos,           // input: sorted position array
                                   float4 *oldVel,           // input: sorted velocity array
+                                  float  *oldRad,			// input:
                                   uint    numParticles)
 {
     extern __shared__ uint sharedHash[];    // blockSize + 1 elements
@@ -208,9 +210,11 @@ void reorderDataAndFindCellStartD(uint   *cellStart,        // output: cell star
         uint sortedIndex = gridParticleIndex[index];
         float4 pos = FETCH(oldPos, sortedIndex);       // macro does either global read or texture fetch
         float4 vel = FETCH(oldVel, sortedIndex);       // see particles_kernel.cuh
+        float  rad = FETCH(oldRad, sortedIndex);
 
         sortedPos[index] = pos;
         sortedVel[index] = vel;
+        sortedRad[index] = rad;
     }
 
 
@@ -262,8 +266,10 @@ float3 collideCell(int3    gridPos,
                    uint    index,
                    float3  pos,
                    float3  vel,
+                   float   rad,
                    float4 *oldPos,
                    float4 *oldVel,
+                   float  *oldRad,
                    uint   *cellStart,
                    uint   *cellEnd)
 {
@@ -285,9 +291,9 @@ float3 collideCell(int3    gridPos,
             {
                 float3 pos2 = make_float3(FETCH(oldPos, j));
                 float3 vel2 = make_float3(FETCH(oldVel, j));
-
+                float  rad2 = FETCH(oldRad, j);
                 // collide two spheres
-                force += collideSpheres(pos, pos2, vel, vel2, params.particleRadius, params.particleRadius, params.attraction);
+                force += collideSpheres(pos, pos2, vel, vel2, rad, rad2, params.attraction);
             }
         }
     }
@@ -300,6 +306,7 @@ __global__
 void collideD(float4 *newVel,               // output: new velocity
               float4 *oldPos,               // input: sorted positions
               float4 *oldVel,               // input: sorted velocities
+              float  *oldRad,
               uint   *gridParticleIndex,    // input: sorted particle indices
               uint   *cellStart,
               uint   *cellEnd,
@@ -312,6 +319,7 @@ void collideD(float4 *newVel,               // output: new velocity
     // read particle data from sorted arrays
     float3 pos = make_float3(FETCH(oldPos, index));
     float3 vel = make_float3(FETCH(oldVel, index));
+    float  rad = FETCH(oldRad, index);
 
     // get address in grid
     int3 gridPos = calcGridPos(pos);
@@ -326,7 +334,7 @@ void collideD(float4 *newVel,               // output: new velocity
             for (int x=-1; x<=1; x++)
             {
                 int3 neighbourPos = gridPos + make_int3(x, y, z);
-                force += collideCell(neighbourPos, index, pos, vel, oldPos, oldVel, cellStart, cellEnd);
+                force += collideCell(neighbourPos, index, pos, vel, rad, oldPos, oldVel, oldRad, cellStart, cellEnd);
             }
         }
     }
@@ -345,7 +353,7 @@ void changeRadiusD(float *radius, uint numParticles)
 	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
 
 	if (index >= numParticles) return;
-	radius[index] *= 1.1; // change later
+	radius[index] *= 10; // change later
 }
 
 #endif

@@ -199,10 +199,12 @@ extern "C"
             cellEnd,
             (float4 *) sortedPos,
             (float4 *) sortedVel,
+            sortedRad,
             gridParticleHash,
             gridParticleIndex,
             (float4 *) oldPos,
             (float4 *) oldVel,
+            oldRad,
             numParticles);
         getLastCudaError("Kernel execution failed: reorderDataAndFindCellStartD");
 
@@ -212,6 +214,7 @@ extern "C"
     void collide(float *newVel,
                  float *sortedPos,
                  float *sortedVel,
+                 float *sortedRad,
                  uint  *gridParticleIndex,
                  uint  *cellStart,
                  uint  *cellEnd,
@@ -228,6 +231,7 @@ extern "C"
         collideD<<< numBlocks, numThreads >>>((float4 *)newVel,
                                               (float4 *)sortedPos,
                                               (float4 *)sortedVel,
+                                              sortedRad,
                                               gridParticleIndex,
                                               cellStart,
                                               cellEnd,

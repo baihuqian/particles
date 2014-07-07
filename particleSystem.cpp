@@ -286,6 +286,7 @@ ParticleSystem::update(float deltaTime)
 			m_dVel,
 			m_dSortedPos,
 			m_dSortedVel,
+			m_dSortedRad,
 			m_dGridParticleIndex,
 			m_dCellStart,
 			m_dCellEnd,
