@@ -607,7 +607,7 @@ void special(int k, int x, int y)
 }
 
 void idle(void)
-{
+{/*
     if ((idleCounter++ > idleDelay) && (demoMode==false))
     {
         demoMode = true;
@@ -625,8 +625,9 @@ void idle(void)
             demoCounter = 0;
         }
     }
-
+*/
     glutPostRedisplay();
+
 }
 
 void initParams()
@@ -724,12 +725,7 @@ main(int argc, char **argv)
         numIterations = getCmdLineArgumentInt(argc, (const char **) argv, "i");
     }
 
-    if (g_refFile)
-    {
-        cudaInit(argc, argv);
-    }
-    else
-    {
+
         if (checkCmdLineFlag(argc, (const char **)argv, "device"))
         {
             printf("[%s]\n", argv[0]);
@@ -742,27 +738,15 @@ main(int argc, char **argv)
 
         initGL(&argc, argv);
         cudaGLInit(argc, argv);
-    }
+
 
     initParticleSystem(numParticles, gridSize, g_refFile==NULL);
     initParams();
 
-    if (!g_refFile)
-    {
+
         initMenus();
-    }
 
-    if (benchmark || g_refFile)
-    {
-        if (numIterations <= 0)
-        {
-            numIterations = 300;
-        }
 
-        runBenchmark(numIterations, argv[0]);
-    }
-    else
-    {
         glutDisplayFunc(display);
         glutReshapeFunc(reshape);
         glutMouseFunc(mouse);
@@ -774,7 +758,7 @@ main(int argc, char **argv)
         glutCloseFunc(cleanup);
 
         glutMainLoop();
-    }
+
 
     if (psystem)
     {
