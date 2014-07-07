@@ -125,10 +125,17 @@ ParticleSystem::_initialize(int numParticles)
 	m_numParticles = numParticles;
 
 	// allocate host storage
+	/*
+	m_hPos = new float[MAX_NUM_PARTICLES*4];
+	m_hVel = new float[MAX_NUM_PARTICLES*4];
+	memset(m_hPos, 0, MAX_NUM_PARTICLES*4*sizeof(float));
+	memset(m_hVel, 0, MAX_NUM_PARTICLES*4*sizeof(float));
+	 */
 	m_hPos = new float[m_numParticles*4];
 	m_hVel = new float[m_numParticles*4];
 	memset(m_hPos, 0, m_numParticles*4*sizeof(float));
 	memset(m_hVel, 0, m_numParticles*4*sizeof(float));
+
 
 	m_hCellStart = new uint[m_numGridCells];
 	memset(m_hCellStart, 0, m_numGridCells*sizeof(uint));
@@ -150,6 +157,7 @@ ParticleSystem::_initialize(int numParticles)
 
 	allocateArray((void **)&m_dSortedPos, memSize);
 	allocateArray((void **)&m_dSortedVel, memSize);
+	allocateArray((void **)&m_dSortedRad, sizeof(float) * MAX_NUM_PARTICLES);
 
 	allocateArray((void **)&m_dGridParticleHash, MAX_NUM_PARTICLES*sizeof(uint));
 	allocateArray((void **)&m_dGridParticleIndex, MAX_NUM_PARTICLES*sizeof(uint));

@@ -162,6 +162,7 @@ class ParticleSystem
 
         float *m_dSortedPos;
         float *m_dSortedVel;
+        float *m_dSortedRad;
 
         // grid data for sorting method
         uint  *m_dGridParticleHash; // grid hash value for each particle
