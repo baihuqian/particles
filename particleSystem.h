@@ -23,7 +23,7 @@
 class ParticleSystem
 {
     public:
-        ParticleSystem(uint numParticles, uint3 gridSize, bool bUseOpenGL);
+        ParticleSystem(uint numParticles, uint3 gridSize);
         ~ParticleSystem();
 
         enum ParticleConfig
@@ -144,7 +144,7 @@ class ParticleSystem
         void initGrid(uint *size, float spacing, float jitter, uint numParticles);
 
     protected: // data
-        bool m_bInitialized, m_bUseOpenGL;
+        bool m_bInitialized;
         uint m_numParticles;
 
         // CPU data
