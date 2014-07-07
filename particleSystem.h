@@ -180,6 +180,7 @@ class ParticleSystem
 
         struct cudaGraphicsResource *m_cuda_posvbo_resource; // handles OpenGL-CUDA exchange
         struct cudaGraphicsResource *m_cuda_colorvbo_resource; // handles OpenGL-CUDA exchange
+        struct cudaGraphicsResource *m_cuda_radiusvbo_resource; // handles OpenGL-CUDA exchange
 
         // params
         SimParams m_params;

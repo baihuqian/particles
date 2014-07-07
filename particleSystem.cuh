@@ -60,4 +60,6 @@ extern "C"
 
     void sortParticles(uint *dGridParticleHash, uint *dGridParticleIndex, uint numParticles);
 
+    void changeRadius(float *radius, uint numParticles);
+
 }

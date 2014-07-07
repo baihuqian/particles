@@ -144,7 +144,7 @@ ParticleSystem::_initialize(int numParticles)
 	registerGLBufferObject(m_posVbo, &m_cuda_posvbo_resource);
 
 	m_radiusVBO = createVBO(sizeof(float) * MAX_NUM_PARTICLES);
-	registerGLBufferObject(m_radiusVBO, &m_cuda_posvbo_resource);
+	registerGLBufferObject(m_radiusVBO, &m_cuda_radiusvbo_resource);
 
 	allocateArray((void **)&m_dVel, memSize);
 
@@ -217,6 +217,8 @@ ParticleSystem::_finalize()
 
 
 	unregisterGLBufferObject(m_cuda_posvbo_resource);
+	unregisterGLBufferObject(m_cuda_radiusvbo_resource);
+	unregisterGLBufferObject(m_cuda_colorvbo_resource);
 	glDeleteBuffers(1, (const GLuint *)&m_posVbo);
 	glDeleteBuffers(1, (const GLuint *)&m_colorVBO);
 	glDeleteBuffers(1, (const GLuint *)&m_radiusVBO);
@@ -229,11 +231,11 @@ ParticleSystem::update(float deltaTime)
 {
 	assert(m_bInitialized);
 
-	float *dPos;
+	float *dPos, *dRad;
 
 
 	dPos = (float *) mapGLBufferObject(&m_cuda_posvbo_resource);
-
+	dRad = (float *) mapGLBufferObject(&m_cuda_radiusvbo_resource);
 
 	// update constants
 	setParameters(&m_params);
@@ -283,7 +285,7 @@ ParticleSystem::update(float deltaTime)
 	// note: do unmap at end here to avoid unnecessary graphics/CUDA context switch
 
 	unmapGLBufferObject(m_cuda_posvbo_resource);
-
+	unmapGLBufferObject(m_cuda_radiusvbo_resource);
 }
 
 void

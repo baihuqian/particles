@@ -261,4 +261,9 @@ extern "C"
                             thrust::device_ptr<uint>(dGridParticleIndex));
     }
 
+    void changeRadius(float *radius, uint numParticles)
+    {
+
+    }
+
 }   // extern "C"
