@@ -339,4 +339,13 @@ void collideD(float4 *newVel,               // output: new velocity
     newVel[originalIndex] = make_float4(vel + force, 0.0f);
 }
 
+__global__
+void changeRadiusD(float *radius, uint numParticles)
+{
+	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
+
+	if (index >= numParticles) return;
+	radius[index] *= 1.1; // change later
+}
+
 #endif
