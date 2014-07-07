@@ -137,26 +137,28 @@ ParticleSystem::_initialize(int numParticles)
 	memset(m_hCellEnd, 0, m_numGridCells*sizeof(uint));
 
 	// allocate GPU data
-	unsigned int memSize = sizeof(float) * 4 * m_numParticles;
+	unsigned int memSize = sizeof(float) * 4 * MAX_NUM_PARTICLES;
 
 
 	m_posVbo = createVBO(memSize);
 	registerGLBufferObject(m_posVbo, &m_cuda_posvbo_resource);
 
+	m_radiusVBO = createVBO(sizeof(float) * MAX_NUM_PARTICLES);
+	registerGLBufferObject(m_radiusVBO, &m_cuda_posvbo_resource);
 
 	allocateArray((void **)&m_dVel, memSize);
 
 	allocateArray((void **)&m_dSortedPos, memSize);
 	allocateArray((void **)&m_dSortedVel, memSize);
 
-	allocateArray((void **)&m_dGridParticleHash, m_numParticles*sizeof(uint));
-	allocateArray((void **)&m_dGridParticleIndex, m_numParticles*sizeof(uint));
+	allocateArray((void **)&m_dGridParticleHash, MAX_NUM_PARTICLES*sizeof(uint));
+	allocateArray((void **)&m_dGridParticleIndex, MAX_NUM_PARTICLES*sizeof(uint));
 
 	allocateArray((void **)&m_dCellStart, m_numGridCells*sizeof(uint));
 	allocateArray((void **)&m_dCellEnd, m_numGridCells*sizeof(uint));
 
 
-	m_colorVBO = createVBO(m_numParticles*4*sizeof(float));
+	m_colorVBO = createVBO(memSize);
 	registerGLBufferObject(m_colorVBO, &m_cuda_colorvbo_resource);
 
 	// fill color buffer
@@ -177,6 +179,15 @@ ParticleSystem::_initialize(int numParticles)
 
 	glUnmapBufferARB(GL_ARRAY_BUFFER);
 
+	glBindBufferARB(GL_ARRAY_BUFFER, m_radiusVBO);
+	data = (float *) glMapBufferARB(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+	ptr = data;
+
+	for(uint i = 0; i < m_numParticles; i++) {
+		*ptr++ = m_params.particleRadius;
+	}
+
+	glUnmapBufferARB(GL_ARRAY_BUFFER);
 
 	sdkCreateTimer(&m_timer);
 
@@ -208,6 +219,7 @@ ParticleSystem::_finalize()
 	unregisterGLBufferObject(m_cuda_posvbo_resource);
 	glDeleteBuffers(1, (const GLuint *)&m_posVbo);
 	glDeleteBuffers(1, (const GLuint *)&m_colorVBO);
+	glDeleteBuffers(1, (const GLuint *)&m_radiusVBO);
 
 }
 

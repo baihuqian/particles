@@ -14,6 +14,7 @@
 
 #define DEBUG_GRID 0
 #define DO_TIMING 0
+#define MAX_NUM_PARTICLES 100000
 
 #include <helper_functions.h>
 #include "particles_kernel.cuh"
@@ -172,6 +173,7 @@ class ParticleSystem
 
         uint   m_posVbo;            // vertex buffer object for particle positions
         uint   m_colorVBO;          // vertex buffer object for colors
+        uint   m_radiusVBO;			// vertex buffer object for radii
 
         float *m_cudaPosVBO;        // these are the CUDA deviceMem Pos
         float *m_cudaColorVBO;      // these are the CUDA deviceMem Color

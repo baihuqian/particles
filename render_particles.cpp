@@ -123,12 +123,15 @@ void ParticleRenderer::display(DisplayMode mode /* = PARTICLE_POINTS */) // call
 GLuint
 ParticleRenderer::_compileProgram(const char *vsource, const char *fsource)
 {
+	// create empty shader
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 
+    // link shader source code
     glShaderSource(vertexShader, 1, &vsource, 0);
     glShaderSource(fragmentShader, 1, &fsource, 0);
 
+    // compile the source code
     glCompileShader(vertexShader);
     glCompileShader(fragmentShader);
 
@@ -141,7 +144,7 @@ ParticleRenderer::_compileProgram(const char *vsource, const char *fsource)
 
     // check if program linked
     GLint success = 0;
-    glGetProgramiv(program, GL_LINK_STATUS, &success);
+    glGetProgramiv(program, GL_LINK_STATUS, &success); // get linked status of program and store it in success
 
     if (!success)
     {
