@@ -175,7 +175,7 @@ void initGL(int *argc, char **argv)
 
 	glutReportErrors();
 }
-
+/*
 void runBenchmark(int iterations, char *exec_path)
 {
 	printf("Run %u particles simulation for %d iterations...\n\n", numParticles, iterations);
@@ -210,7 +210,7 @@ void runBenchmark(int iterations, char *exec_path)
 		}
 	}
 }
-
+*/
 void computeFPS()
 {
 	frameCount++;
@@ -706,18 +706,13 @@ main(int argc, char **argv)
 			gridDim = getCmdLineArgumentInt(argc, (const char **) argv, "grid");
 		}
 
-		if (checkCmdLineFlag(argc, (const char **)argv, "file"))
-		{
-			getCmdLineArgumentString(argc, (const char **)argv, "file", &g_refFile);
-			fpsLimit = frameCheckNumber;
-			numIterations = 1;
-		}
+
 	}
 
 	gridSize.x = gridSize.y = gridSize.z = gridDim;
 	printf("grid: %d x %d x %d = %d cells\n", gridSize.x, gridSize.y, gridSize.z, gridSize.x*gridSize.y*gridSize.z);
 	printf("particles: %d\n", numParticles);
-
+/*
 	bool benchmark = checkCmdLineFlag(argc, (const char **) argv, "benchmark") != 0;
 
 	if (checkCmdLineFlag(argc, (const char **) argv, "i"))
@@ -735,7 +730,7 @@ main(int argc, char **argv)
 		printf("exiting...\n");
 		exit(EXIT_SUCCESS);
 	}
-
+*/
 	initGL(&argc, argv);
 	cudaGLInit(argc, argv);
 

@@ -154,6 +154,7 @@ ParticleRenderer::_compileProgram(const char *vsource, const char *fsource)
     return program;
 }
 
+
 void ParticleRenderer::_initGL()
 {
     m_program = _compileProgram(vertexShader, spherePixelShader);
