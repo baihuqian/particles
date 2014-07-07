@@ -272,10 +272,12 @@ ParticleSystem::update(float deltaTime)
 			m_dCellEnd,
 			m_dSortedPos,
 			m_dSortedVel,
+			m_dSortedRad,
 			m_dGridParticleHash,
 			m_dGridParticleIndex,
 			dPos,
 			m_dVel,
+			dRad,
 			m_numParticles,
 			m_numGridCells);
 

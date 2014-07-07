@@ -42,10 +42,12 @@ extern "C"
                                      uint  *cellEnd,
                                      float *sortedPos,
                                      float *sortedVel,
+                                     float *sortedRad,
                                      uint  *gridParticleHash,
                                      uint  *gridParticleIndex,
                                      float *oldPos,
                                      float *oldVel,
+                                     float *oldRad,
                                      uint   numParticles,
                                      uint   numCells);
 
