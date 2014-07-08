@@ -9,9 +9,11 @@
  *
  */
 
+
 #include "particleSystem.h"
 #include "particleSystem.cuh"
 #include "particles_kernel.cuh"
+
 
 #include <cuda_runtime.h>
 
@@ -202,6 +204,10 @@ ParticleSystem::_initialize(int numParticles)
 
 	setParameters(&m_params);
 
+	// set up random number generator
+	rnd_init(m_devStates, RND_SIZE);
+	allocateArray((void **)&m_rndNum, RND_SIZE * sizeof(float));
+
 	m_bInitialized = true;
 }
 
@@ -232,6 +238,7 @@ ParticleSystem::_finalize()
 	glDeleteBuffers(1, (const GLuint *)&m_colorVBO);
 	glDeleteBuffers(1, (const GLuint *)&m_radiusVBO);
 
+	rnd_finalize(m_devStates);
 }
 
 // step the simulation
@@ -295,7 +302,7 @@ ParticleSystem::update(float deltaTime)
 			m_numParticles,
 			m_numGridCells);
 
-	changeRadius(dRad, m_numParticles);
+	changeRadius(dRad, m_numParticles, m_devStates, m_rndNum);
 	// note: do unmap at end here to avoid unnecessary graphics/CUDA context switch
 
 	unmapGLBufferObject(m_cuda_posvbo_resource);

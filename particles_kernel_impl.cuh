@@ -16,13 +16,14 @@
 #ifndef _PARTICLES_KERNEL_H_
 #define _PARTICLES_KERNEL_H_
 
+#include <curand_kernel.h>
 #include <stdio.h>
 #include <math.h>
 #include "helper_math.h"
 #include "math_constants.h"
 #include "particles_kernel.cuh"
+#include "constant.h"
 
-#define GROWTH_RATE 1.001
 
 
 // simulation parameters in constant memory
@@ -342,13 +343,49 @@ void collideD(float4 *newVel,               // output: new velocity
     newVel[originalIndex] = make_float4(vel + force, 0.0f);
 }
 
+__global__ void setup_kernel ( curandState * state, unsigned long seed )
+{
+	int id = threadIdx.x;
+	curand_init ( seed, id, 0, &state[id] );
+}
+
+__global__ void generate_uniform( curandState* globalState, float *rndNum)
+{
+	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
+	if(index >= RND_SIZE) {
+		return;
+	}
+	curandState localState = globalState[index];
+	__syncthreads();
+	float RANDOM = curand_uniform( &localState );
+	globalState[index] = localState;
+	rndNum[index] = RANDOM;
+
+}
+
+__global__ void generate_normal( curandState* globalState, float *rndNum)
+{
+	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
+	if(index >= RND_SIZE) {
+		return;
+	}
+	curandState localState = globalState[index];
+	__syncthreads();
+	float RANDOM = curand_normal( &localState );
+	globalState[index] = localState;
+	rndNum[index] = RANDOM;
+
+}
+
 __global__
-void changeRadiusD(float *radius, uint numParticles)
+void changeRadiusD(float *radius, uint numParticles, float *rndNum)
 {
 	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
 
 	if (index >= numParticles) return;
-	radius[index] *= GROWTH_RATE; // change later
+	float rand = rndNum[index % RND_SIZE] + 1;
+	rand = (rand < 0 ? -rand : rand);
+	radius[index] *= rand; // change later
 }
 
 #endif

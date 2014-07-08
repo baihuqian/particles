@@ -64,6 +64,9 @@ extern "C"
 
     void sortParticles(uint *dGridParticleHash, uint *dGridParticleIndex, uint numParticles);
 
-    void changeRadius(float *radius, uint numParticles);
+    void rnd_init(curandState* devStates, unsigned int N);
+    void rnd_finalize(curandState *devStates);
+
+    void changeRadius(float *radius, uint numParticles, curandState* devStates, float *rndNum);
 
 }

@@ -171,7 +171,7 @@ GENCODE_FLAGS   ?= $(GENCODE_SM10) $(GENCODE_SM13) $(GENCODE_SM20) $(GENCODE_SM3
 all: build
 
 build: particles
-
+	
 particleSystem.o:particleSystem.cpp
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 
