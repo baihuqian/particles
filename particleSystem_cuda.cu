@@ -253,12 +253,12 @@ extern "C"
                             thrust::device_ptr<uint>(dGridParticleIndex));
     }
 
-    void rnd_init(curandState* devStates, unsigned int N)
+    void rnd_init(curandState* devStates, float *rndNum, unsigned int N)
     {
     	//dim3 tpb(N,1,1);
 
-    	cudaMalloc ( &devStates, N*sizeof( curandState ) );
-
+    	allocateArray((void **) &devStates, N*sizeof( curandState ));
+    	allocateArray((void **)&rndNum, N * sizeof(float));
     	uint numThreads, numBlocks;
     	computeGridSize(N, 256, numBlocks, numThreads);
     	// setup seeds

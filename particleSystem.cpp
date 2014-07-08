@@ -149,6 +149,8 @@ ParticleSystem::_initialize(int numParticles)
 	// allocate GPU data
 	unsigned int memSize = sizeof(float) * 4 * MAX_NUM_PARTICLES;
 
+	// set up random number generator
+	rnd_init(m_devStates, m_rndNum, RND_SIZE);
 
 	m_posVbo = createVBO(memSize);
 	registerGLBufferObject(m_posVbo, &m_cuda_posvbo_resource);
@@ -204,9 +206,7 @@ ParticleSystem::_initialize(int numParticles)
 
 	setParameters(&m_params);
 
-	// set up random number generator
-	rnd_init(m_devStates, RND_SIZE);
-	allocateArray((void **)&m_rndNum, RND_SIZE * sizeof(float));
+
 
 	m_bInitialized = true;
 }
