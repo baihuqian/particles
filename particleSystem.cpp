@@ -70,6 +70,8 @@ m_solverIterations(1)
 	m_params.gravity = make_float3(0.0f, -0.0003f, 0.0f);
 	m_params.globalDamping = 1.0f;
 
+	m_params.numParticles = m_numParticles;
+
 	_initialize(numParticles);
 }
 
@@ -131,12 +133,12 @@ ParticleSystem::_initialize(int numParticles)
 	memset(m_hPos, 0, MAX_NUM_PARTICLES*4*sizeof(float));
 	memset(m_hVel, 0, MAX_NUM_PARTICLES*4*sizeof(float));
 	 */
-	m_hPos = new float[m_numParticles*4];
-	m_hVel = new float[m_numParticles*4];
-	m_hRad = new float[m_numParticles*4];
-	memset(m_hPos, 0, m_numParticles*4*sizeof(float));
-	memset(m_hVel, 0, m_numParticles*4*sizeof(float));
-	memset(m_hRad, m_params.particleRadius, m_numParticles*4*sizeof(float));
+	m_hPos = new float[MAX_NUM_PARTICLES*4];
+	m_hVel = new float[MAX_NUM_PARTICLES*4];
+	m_hRad = new float[MAX_NUM_PARTICLES*4];
+	memset(m_hPos, 0, MAX_NUM_PARTICLES*4*sizeof(float));
+	memset(m_hVel, 0, MAX_NUM_PARTICLES*4*sizeof(float));
+	memset(m_hRad, m_params.particleRadius, MAX_NUM_PARTICLES*4*sizeof(float));
 
 	m_hCellStart = new uint[m_numGridCells];
 	memset(m_hCellStart, 0, m_numGridCells*sizeof(uint));
@@ -202,6 +204,10 @@ ParticleSystem::_initialize(int numParticles)
 
 	setParameters(&m_params);
 
+	// set up min and max radius
+	m_minRadius = 0.5 * m_params.particleRadius;
+	m_maxRadius = 2 * m_params.particleRadius;
+
 	m_bInitialized = true;
 }
 
@@ -248,6 +254,10 @@ ParticleSystem::update(float deltaTime)
 
 	// update constants
 	setParameters(&m_params);
+
+	// check radius
+	m_numParticles = checkRadius(dPos, m_dVel, dRad, m_numParticles, m_minRadius, m_maxRadius);
+
 
 	// integrate
 	integrateSystem(
@@ -454,13 +464,14 @@ ParticleSystem::initGrid(uint *size, float spacing, float jitter, uint numPartic
 void
 ParticleSystem::reset(ParticleConfig config)
 {
+	m_numParticles = m_params.numParticles;
+
 	switch (config)
 	{
 	default:
 	case CONFIG_RANDOM:
 	{
 		int p = 0, v = 0;
-
 		for (uint i=0; i < m_numParticles; i++)
 		{
 			float point[3];

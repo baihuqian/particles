@@ -138,6 +138,11 @@ class ParticleSystem
             return m_params.cellSize;
         }
 
+        int getNumParticles()
+        {
+        	return m_numParticles;
+        }
+
         void addSphere(int index, float *pos, float *vel, int r, float spacing);
 
     protected: // methods
@@ -189,6 +194,8 @@ class ParticleSystem
         struct cudaGraphicsResource *m_cuda_posvbo_resource; // handles OpenGL-CUDA exchange
         struct cudaGraphicsResource *m_cuda_colorvbo_resource; // handles OpenGL-CUDA exchange
         struct cudaGraphicsResource *m_cuda_radiusvbo_resource; // handles OpenGL-CUDA exchange
+
+        float m_minRadius, m_maxRadius;
 
         // params
         SimParams m_params;

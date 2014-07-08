@@ -220,7 +220,7 @@ void computeFPS()
 	{
 		char fps[256];
 		float ifps = 1.f / (sdkGetAverageTimerValue(&timer) / 1000.f);
-		sprintf(fps, "CUDA Particles (%d particles): %3.1f fps", numParticles, ifps);
+		sprintf(fps, "CUDA Particles (%d particles): %3.1f fps", psystem->getNumParticles(), ifps);
 
 		glutSetWindowTitle(fps);
 		fpsCount = 0;
@@ -541,7 +541,7 @@ void key(unsigned char key, int /*x*/, int /*y*/)
 		break;
 
 	case 'u':
-		psystem->dumpParticles(0, numParticles-1);
+		psystem->dumpParticles(0, psystem->getNumParticles()-1);
 		break;
 
 	case 'r':
@@ -633,20 +633,6 @@ void idle(void)
 
 void initParams()
 {
-	if (g_refFile)
-	{
-		timestep = 0.0f;
-		damping = 0.0f;
-		gravity = 0.0f;
-		ballr = 1;
-		collideSpring = 0.0f;
-		collideDamping = 0.0f;
-		collideShear = 0.0f;
-		collideAttraction = 0.0f;
-
-	}
-	else
-	{
 
 		// create a new parameter list
 		params = new ParamListGL("misc");
@@ -659,7 +645,7 @@ void initParams()
 		params->AddParam(new Param<float>("collide damping", collideDamping, 0.0f, 0.1f, 0.001f, &collideDamping));
 		params->AddParam(new Param<float>("collide shear"  , collideShear  , 0.0f, 0.1f, 0.001f, &collideShear));
 		params->AddParam(new Param<float>("collide attract", collideAttraction, 0.0f, 0.1f, 0.001f, &collideAttraction));
-	}
+
 }
 
 void mainMenu(int i)

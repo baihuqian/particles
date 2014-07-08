@@ -40,6 +40,7 @@ struct SimParams
 
     uint numBodies;
     uint maxParticlesPerCell;
+    uint numParticles;
 
     float spring;
     float damping;
