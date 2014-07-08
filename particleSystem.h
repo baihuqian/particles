@@ -60,6 +60,10 @@ class ParticleSystem
         {
             return m_colorVBO;
         }
+        unsigned int getRadiusBuffer()		const
+        {
+        	return m_radiusVBO;
+        }
 
         void *getCudaPosVBO()              const
         {

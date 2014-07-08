@@ -24,6 +24,10 @@ class ParticleRenderer
         {
             m_colorVBO = vbo;
         }
+        void setRadiusBuffer(unsigned int vbo)
+        {
+        	m_radiusVBO = vbo;
+        }
 
         enum DisplayMode
         {
@@ -71,6 +75,7 @@ class ParticleRenderer
 
         GLuint m_vbo;
         GLuint m_colorVBO;
+        GLuint m_radiusVBO;
 };
 
 #endif //__ RENDER_PARTICLES__

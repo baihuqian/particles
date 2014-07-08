@@ -13,7 +13,7 @@
 
 // vertex shader
 const char *vertexShader = STRINGIFY(
-                               uniform float pointRadius;  // point size in world space
+                               in float pointRadius;  // point size in world space
                                uniform float pointScale;   // scale to calculate size in pixels
                                uniform float densityScale;
                                uniform float densityOffset;

@@ -29,7 +29,8 @@ ParticleRenderer::ParticleRenderer()
       m_particleRadius(5.0f * 0.5f),
       m_program(0),
       m_vbo(0),
-      m_colorVBO(0)
+      m_colorVBO(0),
+	  m_radiusVBO(0)
 {
     _initGL();
 }
@@ -80,10 +81,17 @@ void ParticleRenderer::_drawPoints()
             glColorPointer(4, GL_FLOAT, 0, 0);
             glEnableClientState(GL_COLOR_ARRAY);
         }
+        if(m_radiusVBO)
+        {
+        	glEnableVertexAttribArray(0);
+        	glBindBufferARB(GL_ARRAY_BUFFER_ARB, m_radiusVBO);
+        	glVertexAttribPointer(0, 1, GL_FLOAT, GL_FALSE, 0, 0);
+        }
 
         glDrawArrays(GL_POINTS, 0, m_numParticles);
 
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+        glDisableVertexAttribArray(0);
         glDisableClientState(GL_VERTEX_ARRAY);
         glDisableClientState(GL_COLOR_ARRAY);
     //}
@@ -109,7 +117,7 @@ void ParticleRenderer::display(DisplayMode mode /* = PARTICLE_POINTS */) // call
 
             glUseProgram(m_program);
             glUniform1f(glGetUniformLocation(m_program, "pointScale"), m_window_h / tanf(m_fov*0.5f*(float)M_PI/180.0f));
-            glUniform1f(glGetUniformLocation(m_program, "pointRadius"), m_particleRadius);
+            //glUniform1f(glGetUniformLocation(m_program, "pointRadius"), m_particleRadius);
 
             glColor3f(1, 1, 1);
             _drawPoints();
