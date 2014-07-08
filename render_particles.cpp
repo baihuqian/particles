@@ -71,27 +71,28 @@ void ParticleRenderer::_drawPoints()
     }
     else
     {*/
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, m_vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
         glVertexPointer(4, GL_FLOAT, 0, 0);
         glEnableClientState(GL_VERTEX_ARRAY);
 
         if (m_colorVBO)
         {
-            glBindBufferARB(GL_ARRAY_BUFFER_ARB, m_colorVBO);
+            glBindBuffer(GL_ARRAY_BUFFER, m_colorVBO);
             glColorPointer(4, GL_FLOAT, 0, 0);
             glEnableClientState(GL_COLOR_ARRAY);
         }
         if(m_radiusVBO)
         {
         	glEnableVertexAttribArray(0);
-        	glBindBufferARB(GL_ARRAY_BUFFER_ARB, m_radiusVBO);
+        	glBindBuffer(GL_ARRAY_BUFFER, m_radiusVBO);
         	glVertexAttribPointer(0, 1, GL_FLOAT, GL_FALSE, 0, 0);
         }
 
         glDrawArrays(GL_POINTS, 0, m_numParticles);
 
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+
         glDisableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER_ARB, 0);
         glDisableClientState(GL_VERTEX_ARRAY);
         glDisableClientState(GL_COLOR_ARRAY);
     //}
