@@ -136,7 +136,7 @@ ParticleSystem::_initialize(int numParticles)
 	m_hRad = new float[m_numParticles*4];
 	memset(m_hPos, 0, m_numParticles*4*sizeof(float));
 	memset(m_hVel, 0, m_numParticles*4*sizeof(float));
-	memset(m_hVel, m_params.particleRadius, m_numParticles*4*sizeof(float));
+	memset(m_hRad, m_params.particleRadius, m_numParticles*4*sizeof(float));
 
 	m_hCellStart = new uint[m_numGridCells];
 	memset(m_hCellStart, 0, m_numGridCells*sizeof(uint));
