@@ -46,11 +46,8 @@ void ParticleRenderer::setPositions(float *pos, int numParticles)
     m_numParticles = numParticles;
 }
  */
-void ParticleRenderer::setVertexBuffer(unsigned int vbo, int numParticles)
-{
-	m_vbo = vbo;
-	m_numParticles = numParticles;
-}
+
+
 
 void ParticleRenderer::_drawPoints()
 {

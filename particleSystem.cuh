@@ -13,7 +13,7 @@ extern "C"
 {
     void cudaInit(int argc, char **argv);
 
-    void allocateArray(void **devPtr, int size);
+    void allocateArray(void **devPtr, size_t size);
     void freeArray(void *devPtr);
 
     void threadSync();

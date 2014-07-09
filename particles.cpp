@@ -133,6 +133,7 @@ void initParticleSystem(int numParticles, uint3 gridSize)
 
 	renderer = new ParticleRenderer;
 	//renderer->setParticleRadius(psystem->getParticleRadius());
+	renderer->setVertexBuffer(psystem->getCurrentReadBuffer(), psystem->getNumParticles());
 	renderer->setColorBuffer(psystem->getColorBuffer());
     renderer->setRadiusBuffer(psystem->getRadiusBuffer());
 
@@ -251,6 +252,7 @@ void display()
 		{
 			renderer->setVertexBuffer(psystem->getCurrentReadBuffer(), psystem->getNumParticles());
 			renderer->setRadiusBuffer(psystem->getRadiusBuffer());
+			renderer->setColorBuffer(psystem->getColorBuffer());
 		}
 	}
 

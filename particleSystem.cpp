@@ -177,9 +177,9 @@ ParticleSystem::_initialize(int numParticles)
 	float *data = (float *) glMapBufferARB(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
 	float *ptr = data;
 
-	for (uint i=0; i<m_numParticles; i++)
+	for (uint i=0; i<MAX_NUM_PARTICLES; i++)
 	{
-		float t = i / (float) m_numParticles;
+		float t = i / (float) MAX_NUM_PARTICLES;
 
 
 		colorRamp(t, ptr);
@@ -246,26 +246,32 @@ ParticleSystem::update(float deltaTime)
 {
 	assert(m_bInitialized);
 
-	float *dPos, *dRad;
-
-
-	dPos = (float *) mapGLBufferObject(&m_cuda_posvbo_resource);
-	dRad = (float *) mapGLBufferObject(&m_cuda_radiusvbo_resource);
 
 	// update constants
 	setParameters(&m_params);
 
 	// check radius
 
+	float *hPos = getArray(POSITION);
+	float *hVel = getArray(VELOCITY);
+	float *hRad = getArray(RADIUS);
+
 	m_numParticles = checkRadius(
-			getArray(POSITION),
-			getArray(VELOCITY),
-			getArray(RADIUS),
+			hPos,
+			hVel,
+			hRad,
 			m_numParticles,
 			m_minRadius,
 			m_maxRadius);
+	setArray(POSITION, hPos, 0, m_numParticles);
+	setArray(VELOCITY, hVel, 0, m_numParticles);
+	setArray(RADIUS, hRad, 0, m_numParticles);
 
-	std::cout<<m_numParticles<<std::endl;
+
+	float *dPos, *dRad;
+
+	dPos = (float *) mapGLBufferObject(&m_cuda_posvbo_resource);
+	dRad = (float *) mapGLBufferObject(&m_cuda_radiusvbo_resource);
 
 	// integrate
 	integrateSystem(
@@ -376,20 +382,20 @@ ParticleSystem::getArray(ParticleArray array)
 		hdata = m_hPos;
 		ddata = m_dPos;
 		cuda_vbo_resource = m_cuda_posvbo_resource;
-		copyArrayFromDevice(hdata, ddata, &cuda_vbo_resource, m_numParticles*4*sizeof(float));
+		copyArrayFromDevice(hdata, ddata, &cuda_vbo_resource, MAX_NUM_PARTICLES*4*sizeof(float));
 		break;
 
 	case VELOCITY:
 		hdata = m_hVel;
 		ddata = m_dVel;
-		copyArrayFromDevice(hdata, ddata, &cuda_vbo_resource, m_numParticles*4*sizeof(float));
+		copyArrayFromDevice(hdata, ddata, &cuda_vbo_resource, MAX_NUM_PARTICLES*4*sizeof(float));
 		break;
 
 	case RADIUS:
 		hdata = m_hRad;
 		ddata = m_dRad;
 		cuda_vbo_resource = m_cuda_radiusvbo_resource;
-		copyArrayFromDevice(hdata, ddata, &cuda_vbo_resource, m_numParticles*sizeof(float));
+		copyArrayFromDevice(hdata, ddata, &cuda_vbo_resource, MAX_NUM_PARTICLES*sizeof(float));
 		break;
 	}
 

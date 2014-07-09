@@ -109,14 +109,14 @@ void unmapGLBufferObject(struct cudaGraphicsResource *cuda_vbo_resource)
 void copyArrayFromDevice(void *host, const void *device,
 		struct cudaGraphicsResource **cuda_vbo_resource, int size)
 {
-	if (cuda_vbo_resource)
+	if (*cuda_vbo_resource)
 	{
 		device = mapGLBufferObject(cuda_vbo_resource);
 	}
 
 	checkCudaErrors(cudaMemcpy(host, device, size, cudaMemcpyDeviceToHost));
 
-	if (cuda_vbo_resource)
+	if (*cuda_vbo_resource)
 	{
 		unmapGLBufferObject(*cuda_vbo_resource);
 	}
