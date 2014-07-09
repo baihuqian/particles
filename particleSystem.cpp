@@ -256,8 +256,16 @@ ParticleSystem::update(float deltaTime)
 	setParameters(&m_params);
 
 	// check radius
-	m_numParticles = checkRadius(dPos, m_dVel, dRad, m_numParticles, m_minRadius, m_maxRadius);
 
+	m_numParticles = checkRadius(
+			getArray(POSITION),
+			getArray(VELOCITY),
+			getArray(RADIUS),
+			m_numParticles,
+			m_minRadius,
+			m_maxRadius);
+
+	std::cout<<m_numParticles<<std::endl;
 
 	// integrate
 	integrateSystem(
@@ -379,7 +387,7 @@ ParticleSystem::getArray(ParticleArray array)
 
 	case RADIUS:
 		hdata = m_hRad;
-		ddata = m_dVel;
+		ddata = m_dRad;
 		cuda_vbo_resource = m_cuda_radiusvbo_resource;
 		copyArrayFromDevice(hdata, ddata, &cuda_vbo_resource, m_numParticles*sizeof(float));
 		break;
@@ -546,4 +554,50 @@ ParticleSystem::addSphere(int start, float *pos, float *vel, int r, float spacin
 	setArray(POSITION, m_hPos, start, index);
 	setArray(VELOCITY, m_hVel, start, index);
 	setArray(RADIUS, m_hRad, start, index);
+}
+
+uint ParticleSystem::checkRadius(float *position, float *velocity, float *radius, uint numParticles, float minRadius, float maxRadius)
+{
+	//uint oldNumParticles = *numParticles;
+	for(int i = numParticles - 1; i >= 0; i--)
+	{
+		//uint numP = numParticles;
+		if(radius[i] > maxRadius)
+		{
+			if(numParticles < MAX_NUM_PARTICLES) {
+				radius[i] /= 2.0f;
+				position[4*numParticles] = position[4*i];
+				position[4*numParticles+1] = position[4*i+1];
+				position[4*numParticles+2] = position[4*i+2];
+				position[4*numParticles+3] = position[4*i+3];
+
+				velocity[4*numParticles] = velocity[4*i];
+				velocity[4*numParticles+1] = velocity[4*i+1];
+				velocity[4*numParticles+2] = velocity[4*i+2];
+				velocity[4*numParticles+3] = velocity[4*i+3];
+
+				radius[numParticles] = radius[i];
+				numParticles++;
+			}
+		}
+		else if(radius[i] < minRadius)
+		{
+			if(numParticles > 0)
+			{
+				numParticles--;
+				position[4*i] = position[4*numParticles];
+				position[4*i+1] = position[4*numParticles+1];
+				position[4*i+2] = position[4*numParticles+2];
+				position[4*i+3] = position[4*numParticles+3];
+
+				velocity[4*i] = velocity[4*numParticles];
+				velocity[4*i+1] = velocity[4*numParticles+1];
+				velocity[4*i+2] = velocity[4*numParticles+2];
+				velocity[4*i+3] = velocity[4*numParticles+3];
+
+				radius[i] = radius[numParticles];
+			}
+		}
+	}
+	return numParticles;
 }

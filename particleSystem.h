@@ -153,7 +153,7 @@ class ParticleSystem
         void _finalize();
 
         void initGrid(uint *size, float spacing, float jitter, uint numParticles);
-
+        uint checkRadius(float *position, float *velocity, float *radius, uint numParticles, float minRadius, float maxRadius);
     protected: // data
         bool m_bInitialized;
         uint m_numParticles;
