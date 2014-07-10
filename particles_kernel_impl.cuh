@@ -21,8 +21,7 @@
 #include "helper_math.h"
 #include "math_constants.h"
 #include "particles_kernel.cuh"
-
-#define GROWTH_RATE 1.001
+#include "constant.h"
 
 
 // simulation parameters in constant memory

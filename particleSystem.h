@@ -14,12 +14,12 @@
 
 #define DEBUG_GRID 0
 #define DO_TIMING 0
-#define MAX_NUM_PARTICLES 100000
+
 
 #include <helper_functions.h>
 #include "particles_kernel.cuh"
 #include "vector_functions.h"
-
+#include "constant.h"
 // Particle system class
 class ParticleSystem
 {

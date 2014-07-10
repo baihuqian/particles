@@ -27,6 +27,7 @@
 #include <GL/glew.h>
 #include <cmath>
 
+#include "constant.h"
 #ifndef CUDART_PI_F
 #define CUDART_PI_F         3.141592654f
 #endif
@@ -53,7 +54,7 @@ m_timer(NULL)
 	m_params.numCells = m_numGridCells;
 	m_params.numBodies = m_numParticles;
 
-	m_params.particleRadius = 1.0f / 64.0f;
+	m_params.particleRadius = INIT_RADIUS;
 	m_params.colliderPos = make_float3(-1.2f, -0.8f, 0.8f);
 	m_params.colliderRadius = 0.2f;
 
@@ -566,7 +567,7 @@ ParticleSystem::addSphere(int start, float *pos, float *vel, int r, float spacin
 
 uint ParticleSystem::checkRadius(float *position, float *velocity, float *radius, uint numParticles, float minRadius, float maxRadius)
 {
-	float divisionRatio = std::pow(2.0f, 1.0f/3.0f);
+	float divisionRatio = std::pow(2.0f, 1.0f/3.0f); // division ratio that preserve mass and momentum
 	//uint oldNumParticles = *numParticles;
 	for(int i = numParticles - 1; i >= 0; i--)
 	{
@@ -575,6 +576,8 @@ uint ParticleSystem::checkRadius(float *position, float *velocity, float *radius
 		{
 			if(numParticles < MAX_NUM_PARTICLES) { // one particle divide into two
 				radius[i] /= divisionRatio;
+
+				// randomly generate division direction
 				std::srand(std::time(0));
 				float phi = 2 * CUDART_PI_F * ((float)std::rand() / (float)RAND_MAX);
 				std::srand(std::time(0));
