@@ -272,11 +272,11 @@ void rnd_init(curandState* devStates, unsigned int N)
 
 }
 
-void changeRadius(float *radius, uint numParticles, curandState* devStates)
+void changeRadius(float *radius, uint numParticles, curandState *devStates)
 {
 	uint numThreads, numBlocks;
 
-	computeGridSize(numParticles, 256, numBlocks, numThreads);
+	computeGridSize(numParticles, 64, numBlocks, numThreads);
 	changeRadiusD<<<numBlocks, numThreads>>>(radius, numParticles, devStates);
 }
 
