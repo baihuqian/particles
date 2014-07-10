@@ -25,6 +25,7 @@
 #include <cstdlib>
 #include <algorithm>
 #include <GL/glew.h>
+#include <cmath>
 
 #ifndef CUDART_PI_F
 #define CUDART_PI_F         3.141592654f
@@ -565,18 +566,27 @@ ParticleSystem::addSphere(int start, float *pos, float *vel, int r, float spacin
 
 uint ParticleSystem::checkRadius(float *position, float *velocity, float *radius, uint numParticles, float minRadius, float maxRadius)
 {
+	float divisionRatio = std::pow(2.0f, 1.0f/3.0f);
 	//uint oldNumParticles = *numParticles;
 	for(int i = numParticles - 1; i >= 0; i--)
 	{
 		//uint numP = numParticles;
 		if(radius[i] > maxRadius)
 		{
-			if(numParticles < MAX_NUM_PARTICLES) {
-				radius[i] /= 2.0f;
-				position[4*numParticles] = position[4*i] + radius[i];
-				position[4*numParticles+1] = position[4*i+1];
-				position[4*numParticles+2] = position[4*i+2];
+			if(numParticles < MAX_NUM_PARTICLES) { // one particle divide into two
+				radius[i] /= divisionRatio;
+				std::srand(std::time(0));
+				float phi = 2 * CUDART_PI_F * ((float)std::rand() / (float)RAND_MAX);
+				std::srand(std::time(0));
+				float theta = 2 * CUDART_PI_F * ((float)std::rand() / (float)RAND_MAX);
+				position[4*numParticles] = position[4*i] + radius[i]/2 * std::sin(phi) * std::cos(theta);
+				position[4*numParticles+1] = position[4*i+1] + radius[i]/2 * std::sin(phi) * std::sin(theta);
+				position[4*numParticles+2] = position[4*i+2] + radius[i]/2 * std::cos(phi);
 				position[4*numParticles+3] = position[4*i+3];
+
+				position[4*i] -= radius[i]/2 * std::sin(phi) * std::cos(theta);
+				position[4*i+1] -= radius[i]/2 * std::sin(phi) * std::sin(theta);
+				position[4*i+2] -= radius[i]/2 * std::cos(phi);
 
 				velocity[4*numParticles] = velocity[4*i];
 				velocity[4*numParticles+1] = velocity[4*i+1];
