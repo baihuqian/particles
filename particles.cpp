@@ -176,42 +176,7 @@ void initGL(int *argc, char **argv)
 
 	glutReportErrors();
 }
-/*
-void runBenchmark(int iterations, char *exec_path)
-{
-	printf("Run %u particles simulation for %d iterations...\n\n", numParticles, iterations);
-	cudaDeviceSynchronize();
-	sdkStartTimer(&timer);
 
-	for (int i = 0; i < iterations; ++i)
-	{
-		psystem->update(timestep);
-	}
-
-	cudaDeviceSynchronize();
-	sdkStopTimer(&timer);
-	float fAvgSeconds = ((float)1.0e-3 * (float)sdkGetTimerValue(&timer)/(float)iterations);
-
-	printf("particles, Throughput = %.4f KParticles/s, Time = %.5f s, Size = %u particles, NumDevsUsed = %u, Workgroup = %u\n",
-			(1.0e-3 * numParticles)/fAvgSeconds, fAvgSeconds, numParticles, 1, 0);
-
-	if (g_refFile)
-	{
-		printf("\nChecking result...\n\n");
-		float *hPos = (float *)malloc(sizeof(float)*4*psystem->getNumParticles());
-		copyArrayFromDevice(hPos, psystem->getCudaPosVBO(),
-				0, sizeof(float)*4*psystem->getNumParticles());
-
-		sdkDumpBin((void *)hPos, sizeof(float)*4*psystem->getNumParticles(), "particles.bin");
-
-		if (!sdkCompareBin2BinFloat("particles.bin", g_refFile, sizeof(float)*4*psystem->getNumParticles(),
-				MAX_EPSILON_ERROR, THRESHOLD, exec_path))
-		{
-			g_TotalErrors++;
-		}
-	}
-}
-*/
 void computeFPS()
 {
 	frameCount++;
@@ -238,7 +203,7 @@ void display()
 	// update the simulation
 	if (!bPause)
 	{
-		psystem->setIterations(iterations);
+		//psystem->setIterations(iterations);
 		psystem->setDamping(damping);
 		psystem->setGravity(-gravity);
 		psystem->setCollideSpring(collideSpring);

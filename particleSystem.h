@@ -76,12 +76,12 @@ class ParticleSystem
 
         void dumpGrid();
         void dumpParticles(uint start, uint count);
-
+/*
         void setIterations(int i)
         {
             m_solverIterations = i;
         }
-
+*/
         void setDamping(float x)
         {
             m_params.globalDamping = x;
@@ -204,7 +204,7 @@ class ParticleSystem
 
         StopWatchInterface *m_timer;
 
-        uint m_solverIterations;
+        //uint m_solverIterations;
 };
 
 #endif // __PARTICLESYSTEM_H__

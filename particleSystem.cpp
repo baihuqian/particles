@@ -39,8 +39,8 @@ m_hVel(0),
 m_dPos(0),
 m_dVel(0),
 m_gridSize(gridSize),
-m_timer(NULL),
-m_solverIterations(1)
+m_timer(NULL)
+//m_solverIterations(1)
 {
 	m_numGridCells = m_gridSize.x*m_gridSize.y*m_gridSize.z;
 	float3 worldSize = make_float3(2.0f, 2.0f, 2.0f);
@@ -256,17 +256,18 @@ ParticleSystem::update(float deltaTime)
 	float *hVel = getArray(VELOCITY);
 	float *hRad = getArray(RADIUS);
 
-	m_numParticles = checkRadius(
+	uint numParticles = checkRadius(
 			hPos,
 			hVel,
 			hRad,
 			m_numParticles,
 			m_minRadius,
 			m_maxRadius);
-	setArray(POSITION, hPos, 0, m_numParticles);
-	setArray(VELOCITY, hVel, 0, m_numParticles);
-	setArray(RADIUS, hRad, 0, m_numParticles);
+	setArray(POSITION, hPos, 0, MAX_NUM_PARTICLES);
+	setArray(VELOCITY, hVel, 0, MAX_NUM_PARTICLES);
+	setArray(RADIUS, hRad, 0, MAX_NUM_PARTICLES);
 
+	m_numParticles = numParticles;
 
 	float *dPos, *dRad;
 
@@ -572,7 +573,7 @@ uint ParticleSystem::checkRadius(float *position, float *velocity, float *radius
 		{
 			if(numParticles < MAX_NUM_PARTICLES) {
 				radius[i] /= 2.0f;
-				position[4*numParticles] = position[4*i];
+				position[4*numParticles] = position[4*i] + radius[i];
 				position[4*numParticles+1] = position[4*i+1];
 				position[4*numParticles+2] = position[4*i+2];
 				position[4*numParticles+3] = position[4*i+3];

@@ -10,7 +10,7 @@
  */
 
 #include <GL/glew.h>
-
+#include <iostream>
 #include <math.h>
 #include <assert.h>
 #include <stdio.h>
@@ -51,28 +51,7 @@ void ParticleRenderer::setPositions(float *pos, int numParticles)
 
 void ParticleRenderer::_drawPoints()
 {
-	/*
-    if (!m_vbo)
-    {
-        glBegin(GL_POINTS);
-        {
-            int k = 0;
 
-            for (int i = 0; i < m_numParticles; ++i)
-            {
-                glVertex3fv(&m_pos[k]);
-                k += 4;
-            }
-        }
-        glEnd();
-    }
-    else
-    {*/
-/*
-	GLuint vao = 0;
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-*/
 	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
 	glVertexPointer(4, GL_FLOAT, 0, 0);
 	glEnableClientState(GL_VERTEX_ARRAY);
@@ -94,10 +73,9 @@ void ParticleRenderer::_drawPoints()
 
 
 	glDisableVertexAttribArray(1);
-	glBindBuffer(GL_ARRAY_BUFFER_ARB, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_COLOR_ARRAY);
-	//}
 }
 
 void ParticleRenderer::display(DisplayMode mode /* = PARTICLE_POINTS */) // called in particles.cpp -> display()
