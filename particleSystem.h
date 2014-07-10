@@ -15,6 +15,7 @@
 #define DEBUG_GRID 0
 #define DO_TIMING 0
 
+
 #include <curand_kernel.h>
 #include "constant.h"
 #include <helper_functions.h>

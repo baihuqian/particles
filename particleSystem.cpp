@@ -27,7 +27,9 @@
 #include <cstdlib>
 #include <algorithm>
 #include <GL/glew.h>
+#include <cmath>
 
+#include "constant.h"
 #ifndef CUDART_PI_F
 #define CUDART_PI_F         3.141592654f
 #endif
@@ -54,7 +56,7 @@ m_timer(NULL)
 	m_params.numCells = m_numGridCells;
 	m_params.numBodies = m_numParticles;
 
-	m_params.particleRadius = 1.0f / 64.0f;
+	m_params.particleRadius = INIT_RADIUS;
 	m_params.colliderPos = make_float3(-1.2f, -0.8f, 0.8f);
 	m_params.colliderRadius = 0.2f;
 
@@ -572,18 +574,24 @@ ParticleSystem::addSphere(int start, float *pos, float *vel, int r, float spacin
 
 uint ParticleSystem::checkRadius(float *position, float *velocity, float *radius, uint numParticles, float minRadius, float maxRadius)
 {
+	float divisionRatio = std::pow(2.0f, 1.0f/3.0f); // division ratio that preserve mass and momentum
 	//uint oldNumParticles = *numParticles;
 	for(int i = numParticles - 1; i >= 0; i--)
 	{
 		//uint numP = numParticles;
 		if(radius[i] > maxRadius)
 		{
-			if(numParticles < MAX_NUM_PARTICLES) {
-				radius[i] /= 2.0f;
+
+
+			if(numParticles < MAX_NUM_PARTICLES) { // one particle divide into two
+				radius[i] /= divisionRatio;
+
+				// randomly generate division direction
 				std::srand(std::time(0));
-				float phi = 2 * CUDART_PI_F * (std::rand() / RAND_MAX);
+				float phi = 2 * CUDART_PI_F * ((float)std::rand() / (float)RAND_MAX);
 				std::srand(std::time(0));
-				float theta = 2 * CUDART_PI_F * (std::rand() / RAND_MAX);
+				float theta = 2 * CUDART_PI_F * ((float)std::rand() / (float)RAND_MAX);
+
 				position[4*numParticles] = position[4*i] + radius[i]/2 * std::sin(phi) * std::cos(theta);
 				position[4*numParticles+1] = position[4*i+1] + radius[i]/2 * std::sin(phi) * std::sin(theta);
 				position[4*numParticles+2] = position[4*i+2] + radius[i]/2 * std::cos(phi);
