@@ -154,7 +154,7 @@ ParticleSystem::_initialize(int numParticles)
 	unsigned int memSize = sizeof(float) * 4 * MAX_NUM_PARTICLES;
 
 	// set up random number generator
-	rnd_init(m_devStates, m_rndNum, RND_SIZE);
+	rnd_init(m_devStates, MAX_NUM_PARTICLES);
 
 	m_posVbo = createVBO(memSize);
 	registerGLBufferObject(m_posVbo, &m_cuda_posvbo_resource);
@@ -237,7 +237,9 @@ ParticleSystem::_finalize()
 	freeArray(m_dGridParticleIndex);
 	freeArray(m_dCellStart);
 	freeArray(m_dCellEnd);
-
+	// random number
+	freeArray(m_devStates);
+	//freeArray(m_rndNum);
 
 	unregisterGLBufferObject(m_cuda_posvbo_resource);
 	unregisterGLBufferObject(m_cuda_radiusvbo_resource);
@@ -246,7 +248,7 @@ ParticleSystem::_finalize()
 	glDeleteBuffers(1, (const GLuint *)&m_colorVBO);
 	glDeleteBuffers(1, (const GLuint *)&m_radiusVBO);
 
-	rnd_finalize(m_devStates);
+
 }
 
 // step the simulation
@@ -329,7 +331,7 @@ ParticleSystem::update(float deltaTime)
 			m_numParticles,
 			m_numGridCells);
 
-	changeRadius(dRad, m_numParticles, m_devStates, m_rndNum);
+	changeRadius(dRad, m_numParticles, m_devStates);
 	// note: do unmap at end here to avoid unnecessary graphics/CUDA context switch
 
 	unmapGLBufferObject(m_cuda_posvbo_resource);

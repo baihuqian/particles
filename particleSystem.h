@@ -202,7 +202,7 @@ class ParticleSystem
         float m_minRadius, m_maxRadius;
 
         curandState* m_devStates; // used for random number generator
-        float *m_rndNum;		// store random numbers
+        //float *m_rndNum;		// store random numbers
 
 
         // params

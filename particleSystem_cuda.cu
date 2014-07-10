@@ -256,36 +256,29 @@ void sortParticles(uint *dGridParticleHash, uint *dGridParticleIndex, uint numPa
 
 
 
-    void rnd_init(curandState* devStates, float *rndNum, unsigned int N)
-    {
-    	//dim3 tpb(N,1,1);
+void rnd_init(curandState* devStates, unsigned int N)
+{
+	//dim3 tpb(N,1,1);
 
-    	allocateArray((void **) &devStates, N*sizeof( curandState ));
-    	allocateArray((void **)&rndNum, N * sizeof(float));
-    	uint numThreads, numBlocks;
-    	computeGridSize(N, 256, numBlocks, numThreads);
-    	// setup seeds
-    	setup_kernel <<< numBlocks, numThreads >>> ( devStates, time(NULL) );
+	allocateArray((void **) &devStates, N*sizeof( curandState ));
+	//allocateArray((void **)&rndNum, N * sizeof(float));
+	uint numThreads, numBlocks;
+	computeGridSize(N, 256, numBlocks, numThreads);
+	// setup seeds
+	setup_kernel <<< numBlocks, numThreads >>> ( devStates, time(NULL) );
 
-    	// generate random numbers
-    	//generate <<< 1, tpb >>> ( devStates );
+	// generate random numbers
+	//generate <<< 1, tpb >>> ( devStates );
 
-    }
+}
 
-    void rnd_finalize(curandState *devStates)
-    {
-    	cudaFree(devStates);
-    }
+void changeRadius(float *radius, uint numParticles, curandState* devStates)
+{
+	uint numThreads, numBlocks;
 
-    void changeRadius(float *radius, uint numParticles, curandState* devStates, float *rndNum)
-    {
-    	uint numThreads, numBlocks;
-
-    	computeGridSize(RND_SIZE, 64, numBlocks, numThreads);
-    	generate_normal<<<numBlocks, numThreads>>>(devStates, rndNum);
-    	computeGridSize(numParticles, 64, numBlocks, numThreads);
-    	changeRadiusD<<<numBlocks, numThreads>>>(radius, numParticles, rndNum);
-    }
+	computeGridSize(numParticles, 256, numBlocks, numThreads);
+	changeRadiusD<<<numBlocks, numThreads>>>(radius, numParticles, devStates);
+}
 
 
 

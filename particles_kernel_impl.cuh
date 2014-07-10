@@ -349,21 +349,21 @@ __global__ void setup_kernel ( curandState * state, unsigned long seed )
 	curand_init ( seed, id, 0, &state[id] );
 }
 
-__global__ void generate_uniform( curandState* globalState, float *rndNum)
+__device__ void generate_uniform( curandState* globalState, float &RANDOM)
 {
 	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
-	if(index >= RND_SIZE) {
+	if(index >= MAX_NUM_PARTICLES) {
 		return;
 	}
 	curandState localState = globalState[index];
-	__syncthreads();
-	float RANDOM = curand_uniform( &localState );
+	//__syncthreads();
+	RANDOM = curand_uniform( &localState );
 	globalState[index] = localState;
-	rndNum[index] = RANDOM;
+	//rndNum[index] = RANDOM;
 
 }
 
-__global__ void generate_normal( curandState* globalState, float *rndNum)
+__device__ void generate_normal( curandState* globalState, float &rndNum)
 {
 	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
 	if(index >= RND_SIZE) {
@@ -371,19 +371,21 @@ __global__ void generate_normal( curandState* globalState, float *rndNum)
 	}
 	curandState localState = globalState[index];
 	__syncthreads();
-	float RANDOM = curand_normal( &localState );
+	rndNum = curand_normal( &localState );
 	globalState[index] = localState;
-	rndNum[index] = RANDOM;
+	//rndNum[index] = RANDOM;
 
 }
 
 __global__
-void changeRadiusD(float *radius, uint numParticles, float *rndNum)
+void changeRadiusD(float *radius, uint numParticles, curandState *devState)
 {
 	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
 
 	if (index >= numParticles) return;
-	float rand = rndNum[index % RND_SIZE] + 1;
+	float rand;
+	generate_normal(devState, rand);
+	rand += 1;
 	rand = (rand < 0 ? -rand : rand);
 	radius[index] *= rand; // change later
 }
