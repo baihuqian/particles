@@ -9,9 +9,11 @@
  *
  */
 
+
 #include "particleSystem.h"
 #include "particleSystem.cuh"
 #include "particles_kernel.cuh"
+
 
 #include <cuda_runtime.h>
 
@@ -149,6 +151,8 @@ ParticleSystem::_initialize(int numParticles)
 	// allocate GPU data
 	unsigned int memSize = sizeof(float) * 4 * MAX_NUM_PARTICLES;
 
+	// set up random number generator
+	rnd_init(m_devStates, m_rndNum, RND_SIZE);
 
 	m_posVbo = createVBO(memSize);
 	registerGLBufferObject(m_posVbo, &m_cuda_posvbo_resource);
@@ -208,6 +212,8 @@ ParticleSystem::_initialize(int numParticles)
 	m_minRadius = 0.5 * m_params.particleRadius;
 	m_maxRadius = 2 * m_params.particleRadius;
 
+
+
 	m_bInitialized = true;
 }
 
@@ -238,6 +244,7 @@ ParticleSystem::_finalize()
 	glDeleteBuffers(1, (const GLuint *)&m_colorVBO);
 	glDeleteBuffers(1, (const GLuint *)&m_radiusVBO);
 
+	rnd_finalize(m_devStates);
 }
 
 // step the simulation
@@ -320,7 +327,7 @@ ParticleSystem::update(float deltaTime)
 			m_numParticles,
 			m_numGridCells);
 
-	changeRadius(dRad, m_numParticles);
+	changeRadius(dRad, m_numParticles, m_devStates, m_rndNum);
 	// note: do unmap at end here to avoid unnecessary graphics/CUDA context switch
 
 	unmapGLBufferObject(m_cuda_posvbo_resource);
@@ -573,10 +580,18 @@ uint ParticleSystem::checkRadius(float *position, float *velocity, float *radius
 		{
 			if(numParticles < MAX_NUM_PARTICLES) {
 				radius[i] /= 2.0f;
-				position[4*numParticles] = position[4*i] + radius[i];
-				position[4*numParticles+1] = position[4*i+1];
-				position[4*numParticles+2] = position[4*i+2];
+				std::srand(std::time(0));
+				float phi = 2 * CUDART_PI_F * (std::rand() / RAND_MAX);
+				std::srand(std::time(0));
+				float theta = 2 * CUDART_PI_F * (std::rand() / RAND_MAX);
+				position[4*numParticles] = position[4*i] + radius[i]/2 * std::sin(phi) * std::cos(theta);
+				position[4*numParticles+1] = position[4*i+1] + radius[i]/2 * std::sin(phi) * std::sin(theta);
+				position[4*numParticles+2] = position[4*i+2] + radius[i]/2 * std::cos(phi);
 				position[4*numParticles+3] = position[4*i+3];
+
+				position[4*i] -= radius[i]/2 * std::sin(phi) * std::cos(theta);
+				position[4*i+1] -= radius[i]/2 * std::sin(phi) * std::sin(theta);
+				position[4*i+2] -= radius[i]/2 * std::cos(phi);
 
 				velocity[4*numParticles] = velocity[4*i];
 				velocity[4*numParticles+1] = velocity[4*i+1];

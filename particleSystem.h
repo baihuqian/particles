@@ -14,11 +14,13 @@
 
 #define DEBUG_GRID 0
 #define DO_TIMING 0
-#define MAX_NUM_PARTICLES 100000
 
+#include <curand_kernel.h>
+#include "constant.h"
 #include <helper_functions.h>
 #include "particles_kernel.cuh"
 #include "vector_functions.h"
+
 
 // Particle system class
 class ParticleSystem
@@ -195,7 +197,12 @@ class ParticleSystem
         struct cudaGraphicsResource *m_cuda_colorvbo_resource; // handles OpenGL-CUDA exchange
         struct cudaGraphicsResource *m_cuda_radiusvbo_resource; // handles OpenGL-CUDA exchange
 
+
         float m_minRadius, m_maxRadius;
+
+        curandState* m_devStates; // used for random number generator
+        float *m_rndNum;		// store random numbers
+
 
         // params
         SimParams m_params;

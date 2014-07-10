@@ -27,12 +27,12 @@
 
 #include <helper_cuda.h>
 #include <helper_cuda_gl.h>
-
+#include <curand_kernel.h>
 #include <helper_functions.h>
-#include "thrust/device_ptr.h"
-#include "thrust/for_each.h"
-#include "thrust/iterator/zip_iterator.h"
-#include "thrust/sort.h"
+#include <thrust/device_ptr.h>
+#include <thrust/for_each.h>
+#include <thrust/iterator/zip_iterator.h>
+#include <thrust/sort.h>
 
 #include "particles_kernel_impl.cuh"
 #include "constant.h"
@@ -254,13 +254,39 @@ void sortParticles(uint *dGridParticleHash, uint *dGridParticleIndex, uint numPa
 			thrust::device_ptr<uint>(dGridParticleIndex));
 }
 
-void changeRadius(float *radius, uint numParticles)
-{
-	uint numThreads, numBlocks;
-	computeGridSize(numParticles, 64, numBlocks, numThreads);
 
-	changeRadiusD<<<numBlocks, numThreads>>>(radius, numParticles);
-}
+
+    void rnd_init(curandState* devStates, float *rndNum, unsigned int N)
+    {
+    	//dim3 tpb(N,1,1);
+
+    	allocateArray((void **) &devStates, N*sizeof( curandState ));
+    	allocateArray((void **)&rndNum, N * sizeof(float));
+    	uint numThreads, numBlocks;
+    	computeGridSize(N, 256, numBlocks, numThreads);
+    	// setup seeds
+    	setup_kernel <<< numBlocks, numThreads >>> ( devStates, time(NULL) );
+
+    	// generate random numbers
+    	//generate <<< 1, tpb >>> ( devStates );
+
+    }
+
+    void rnd_finalize(curandState *devStates)
+    {
+    	cudaFree(devStates);
+    }
+
+    void changeRadius(float *radius, uint numParticles, curandState* devStates, float *rndNum)
+    {
+    	uint numThreads, numBlocks;
+
+    	computeGridSize(RND_SIZE, 64, numBlocks, numThreads);
+    	generate_normal<<<numBlocks, numThreads>>>(devStates, rndNum);
+    	computeGridSize(numParticles, 64, numBlocks, numThreads);
+    	changeRadiusD<<<numBlocks, numThreads>>>(radius, numParticles, rndNum);
+    }
+
 
 
 
