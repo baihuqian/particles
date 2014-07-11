@@ -154,7 +154,7 @@ ParticleSystem::_initialize(int numParticles)
 	unsigned int memSize = sizeof(float) * 4 * MAX_NUM_PARTICLES;
 
 	// set up random number generator
-	rnd_init(m_devStates, MAX_NUM_PARTICLES);
+	rnd_init(m_devStates);
 
 	m_posVbo = createVBO(memSize);
 	registerGLBufferObject(m_posVbo, &m_cuda_posvbo_resource);
