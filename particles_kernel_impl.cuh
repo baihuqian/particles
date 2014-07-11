@@ -345,33 +345,11 @@ void collideD(float4 *newVel,               // output: new velocity
 
 __global__ void setup_kernel ( curandState * state, unsigned long seed )
 {
-	int id = threadIdx.x;
+	uint id = blockIdx.x * blockDim.x + threadIdx.x;
+	if (id >= MAX_NUM_PARTICLES) return;
 	curand_init ( seed, id, 0, &state[id] );
 }
-/*
-__device__ float generate_uniform( curandState &localState)
-{
 
-	//__syncthreads();
-	float RANDOM = curand_uniform( &localState );
-	//rndNum[index] = RANDOM;
-	return RANDOM;
-}
-
-__device__ float generate_normal( curandState* globalState)
-{
-	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
-	if(index >= MAX_NUM_PARTICLES) {
-		return -1000;
-	}
-	curandState localState = globalState[index];
-	//__syncthreads();
-	float RANDOM = curand_normal( &localState );
-	globalState[index] = localState;
-	//rndNum[index] = RANDOM;
-	return RANDOM;
-}
-*/
 __global__
 void changeRadiusD(float *radius, uint numParticles, curandState *devState)
 {

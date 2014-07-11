@@ -21,7 +21,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <string.h>
-
+#include <ctime>
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 
@@ -256,20 +256,14 @@ void sortParticles(uint *dGridParticleHash, uint *dGridParticleIndex, uint numPa
 
 
 
-void rnd_init(curandState* devStates, unsigned int N)
+void rnd_init(curandState* devStates)
 {
-	//dim3 tpb(N,1,1);
-
-	allocateArray((void **) &devStates, N*sizeof( curandState ));
-	//allocateArray((void **)&rndNum, N * sizeof(float));
+	allocateArray((void **) &devStates, MAX_NUM_PARTICLES * sizeof( curandState ));
 	uint numThreads, numBlocks;
-	computeGridSize(N, 256, numBlocks, numThreads);
+	computeGridSize(MAX_NUM_PARTICLES, 256, numBlocks, numThreads);
 	// setup seeds
-	setup_kernel <<< numBlocks, numThreads >>> ( devStates, time(NULL) );
-
-	// generate random numbers
-	//generate <<< 1, tpb >>> ( devStates );
-
+	unsigned long seed = (unsigned long) std::time(NULL);
+	setup_kernel <<< numBlocks, numThreads >>> ( devStates, seed );
 }
 
 void changeRadius(float *radius, uint numParticles, curandState *devStates)
