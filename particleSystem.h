@@ -149,7 +149,7 @@ class ParticleSystem
         void addSphere(int index, float *pos, float *vel, int r, float spacing);
 
     protected: // methods
-        ParticleSystem() {}
+        //ParticleSystem() {}
         uint createVBO(uint size);
 
         void _initialize(int numParticles);
@@ -157,6 +157,7 @@ class ParticleSystem
 
         void initGrid(uint *size, float spacing, float jitter, uint numParticles);
         uint checkRadius(float *position, float *velocity, float *radius, uint numParticles, float minRadius, float maxRadius);
+
     protected: // data
         bool m_bInitialized;
         uint m_numParticles;
@@ -201,8 +202,7 @@ class ParticleSystem
 
         float m_minRadius, m_maxRadius;
 
-        curandState* m_devStates; // used for random number generator
-        //float *m_rndNum;		// store random numbers
+        curandState *m_devStates; // used for random number generator
 
 
         // params

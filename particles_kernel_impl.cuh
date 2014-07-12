@@ -343,11 +343,11 @@ void collideD(float4 *newVel,               // output: new velocity
     newVel[originalIndex] = make_float4(vel + force, 0.0f);
 }
 
-__global__ void setup_kernel ( curandState * state, unsigned long seed )
+__global__ void setup_kernel ( curandState *state, unsigned long seed )
 {
 	uint id = blockIdx.x * blockDim.x + threadIdx.x;
 	if (id >= MAX_NUM_PARTICLES) return;
-	curand_init ( seed, id, 0, &state[id] );
+	curand_init ( seed, 0, 0, &state[id] );
 }
 
 __global__
@@ -360,6 +360,7 @@ void changeRadiusD(float *radius, uint numParticles, curandState *devState)
 	float rand = curand_normal(&localState) + 1;
 	rand = (rand < 0 ? -rand : rand);
 	radius[index] *= rand; // change later
+	//radius[index] *= GROWTH_RATE;
 }
 
 #endif

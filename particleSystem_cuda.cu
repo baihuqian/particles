@@ -256,9 +256,9 @@ void sortParticles(uint *dGridParticleHash, uint *dGridParticleIndex, uint numPa
 
 
 
-void rnd_init(curandState* devStates)
+void rnd_init(curandState *devStates)
 {
-	allocateArray((void **) &devStates, MAX_NUM_PARTICLES * sizeof( curandState ));
+	allocateArray((void **) &devStates, MAX_NUM_PARTICLES * sizeof(curandState));
 	uint numThreads, numBlocks;
 	computeGridSize(MAX_NUM_PARTICLES, 256, numBlocks, numThreads);
 	// setup seeds
@@ -270,11 +270,8 @@ void changeRadius(float *radius, uint numParticles, curandState *devStates)
 {
 	uint numThreads, numBlocks;
 
-	computeGridSize(numParticles, 64, numBlocks, numThreads);
+	computeGridSize(numParticles, 256, numBlocks, numThreads);
 	changeRadiusD<<<numBlocks, numThreads>>>(radius, numParticles, devStates);
 }
-
-
-
 
 }   // extern "C"

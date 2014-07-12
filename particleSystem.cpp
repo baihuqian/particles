@@ -36,7 +36,6 @@
 
 ParticleSystem::ParticleSystem(uint numParticles, uint3 gridSize) :
 m_bInitialized(false),
-//m_bUseOpenGL(bUseOpenGL),
 m_numParticles(numParticles),
 m_hPos(0),
 m_hVel(0),
@@ -44,7 +43,6 @@ m_dPos(0),
 m_dVel(0),
 m_gridSize(gridSize),
 m_timer(NULL)
-//m_solverIterations(1)
 {
 	m_numGridCells = m_gridSize.x*m_gridSize.y*m_gridSize.z;
 	float3 worldSize = make_float3(2.0f, 2.0f, 2.0f);
@@ -61,7 +59,6 @@ m_timer(NULL)
 	m_params.colliderRadius = 0.2f;
 
 	m_params.worldOrigin = make_float3(-1.0f, -1.0f, -1.0f);
-	//    m_params.cellSize = make_float3(worldSize.x / m_gridSize.x, worldSize.y / m_gridSize.y, worldSize.z / m_gridSize.z);
 	float cellSize = m_params.particleRadius * 2.0f;  // cell size equal to particle diameter
 	m_params.cellSize = make_float3(cellSize, cellSize, cellSize);
 
@@ -131,12 +128,6 @@ ParticleSystem::_initialize(int numParticles)
 	m_numParticles = numParticles;
 
 	// allocate host storage
-	/*
-	m_hPos = new float[MAX_NUM_PARTICLES*4];
-	m_hVel = new float[MAX_NUM_PARTICLES*4];
-	memset(m_hPos, 0, MAX_NUM_PARTICLES*4*sizeof(float));
-	memset(m_hVel, 0, MAX_NUM_PARTICLES*4*sizeof(float));
-	 */
 	m_hPos = new float[MAX_NUM_PARTICLES*4];
 	m_hVel = new float[MAX_NUM_PARTICLES*4];
 	m_hRad = new float[MAX_NUM_PARTICLES*4];
@@ -332,8 +323,9 @@ ParticleSystem::update(float deltaTime)
 			m_numGridCells);
 
 	changeRadius(dRad, m_numParticles, m_devStates);
-	// note: do unmap at end here to avoid unnecessary graphics/CUDA context switch
 
+
+	// note: do unmap at end here to avoid unnecessary graphics/CUDA context switch
 	unmapGLBufferObject(m_cuda_posvbo_resource);
 	unmapGLBufferObject(m_cuda_radiusvbo_resource);
 }
