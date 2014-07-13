@@ -66,6 +66,6 @@ extern "C"
 
     void changeRadius(float *radius, uint numParticles);
 
-    //uint checkRadius(float *position, float *velocity, float *radius, uint numParticles, float minRadius, float maxRadius);
+    uint checkRadius(float *position, float *velocity, float *radius, uint &numParticles, float minRadius, float maxRadius, float divisionRatio);
 
 }

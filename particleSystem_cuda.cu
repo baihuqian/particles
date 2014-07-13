@@ -33,6 +33,7 @@
 #include "thrust/for_each.h"
 #include "thrust/iterator/zip_iterator.h"
 #include "thrust/sort.h"
+#include "thrust/scan.h"
 
 #include "particles_kernel_impl.cuh"
 #include "constant.h"
@@ -262,6 +263,19 @@ void changeRadius(float *radius, uint numParticles)
 	changeRadiusD<<<numBlocks, numThreads>>>(radius, numParticles);
 }
 
-
+void checkRadius(float *position, float *velocity, float *radius, uint &numParticles, float minRadius, float maxRadius, float divisionRatio)
+{
+	int *loc, *item;
+	allocateArray((void **) &loc, numParticles * sizeof(int));
+	allocateArray((void **) &item, numParticles * sizeof(int));
+	uint numThreads, numBlocks;
+	computeGridSize(numParticles, 64, numBlocks, numThreads);
+	checkDivisionAndDeath<<<numBlocks, numThreads>>>(radius, item, numParticles, minRadius, maxRadius);
+	thrust::exclusive_scan(item, item + numParticles, loc); // check this
+	//applyDivisionAndDeath<<<numBlocks, numThreads>>>((float4 *)position, (float4 *)velocity, radius, numParticles, loc, item, divisionRatio);
+	//numParticles = loc[numParticles - 1] + item[numParticles - 1];
+	freeArray(loc);
+	freeArray(item);
+}
 
 }   // extern "C"

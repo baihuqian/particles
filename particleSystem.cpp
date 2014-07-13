@@ -253,28 +253,34 @@ ParticleSystem::update(float deltaTime)
 	setParameters(&m_params);
 
 	// check radius
-
+/*
 	float *hPos = getArray(POSITION);
 	float *hVel = getArray(VELOCITY);
 	float *hRad = getArray(RADIUS);
-
-	uint numParticles = checkRadius(
-			hPos,
-			hVel,
-			hRad,
-			m_numParticles,
-			m_minRadius,
-			m_maxRadius);
-	setArray(POSITION, hPos, 0, MAX_NUM_PARTICLES);
-	setArray(VELOCITY, hVel, 0, MAX_NUM_PARTICLES);
-	setArray(RADIUS, hRad, 0, MAX_NUM_PARTICLES);
-
-	m_numParticles = numParticles;
+*/
 
 	float *dPos, *dRad;
 
 	dPos = (float *) mapGLBufferObject(&m_cuda_posvbo_resource);
 	dRad = (float *) mapGLBufferObject(&m_cuda_radiusvbo_resource);
+
+	float divisionRatio = std::pow(2.0f, 1.0f/3.0f);
+	checkRadius(
+			dPos,
+			m_dVel,
+			dRad,
+			m_numParticles,
+			m_minRadius,
+			m_maxRadius,
+			divisionRatio);
+	/*
+	setArray(POSITION, hPos, 0, MAX_NUM_PARTICLES);
+	setArray(VELOCITY, hVel, 0, MAX_NUM_PARTICLES);
+	setArray(RADIUS, hRad, 0, MAX_NUM_PARTICLES);
+*/
+	//m_numParticles = numParticles;
+
+
 
 	// integrate
 	integrateSystem(
@@ -564,7 +570,7 @@ ParticleSystem::addSphere(int start, float *pos, float *vel, int r, float spacin
 	setArray(VELOCITY, m_hVel, start, index);
 	setArray(RADIUS, m_hRad, start, index);
 }
-
+/*
 uint ParticleSystem::checkRadius(float *position, float *velocity, float *radius, uint numParticles, float minRadius, float maxRadius)
 {
 	float divisionRatio = std::pow(2.0f, 1.0f/3.0f); // division ratio that preserve mass and momentum
@@ -621,3 +627,4 @@ uint ParticleSystem::checkRadius(float *position, float *velocity, float *radius
 	}
 	return numParticles;
 }
+*/
