@@ -145,6 +145,7 @@ ParticleSystem::_initialize(int numParticles)
 	unsigned int memSize = sizeof(float) * 4 * MAX_NUM_PARTICLES;
 
 	// set up random number generator
+	allocateArray((void **) &m_devStates, MAX_NUM_PARTICLES * sizeof(curandState));
 	rnd_init(m_devStates);
 
 	m_posVbo = createVBO(memSize);
@@ -568,7 +569,7 @@ ParticleSystem::addSphere(int start, float *pos, float *vel, int r, float spacin
 
 uint ParticleSystem::checkRadius(float *position, float *velocity, float *radius, uint numParticles, float minRadius, float maxRadius)
 {
-	float divisionRatio = std::pow(2.0f, 1.0f/3.0f); // division ratio that preserve mass and momentum
+	const float divisionRatio = std::pow(2.0f, 1.0f/3.0f); // division ratio that preserve mass and momentum
 	//uint oldNumParticles = *numParticles;
 	for(int i = numParticles - 1; i >= 0; i--)
 	{

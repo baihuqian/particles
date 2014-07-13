@@ -258,7 +258,7 @@ void sortParticles(uint *dGridParticleHash, uint *dGridParticleIndex, uint numPa
 
 void rnd_init(curandState *devStates)
 {
-	allocateArray((void **) &devStates, MAX_NUM_PARTICLES * sizeof(curandState));
+
 	uint numThreads, numBlocks;
 	computeGridSize(MAX_NUM_PARTICLES, 256, numBlocks, numThreads);
 	// setup seeds

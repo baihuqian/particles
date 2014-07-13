@@ -353,12 +353,14 @@ __global__ void setup_kernel ( curandState *state, unsigned long seed )
 __global__
 void changeRadiusD(float *radius, uint numParticles, curandState *devState)
 {
-	uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
+	uint index = blockIdx.x * blockDim.x + threadIdx.x;
 
 	if (index >= numParticles) return;
 	curandState localState = devState[index];
-	float rand = curand_normal(&localState) + 1;
-	rand = (rand < 0 ? -rand : rand);
+	float rand = curand_normal(&localState) * 0.05 + 0.8f;
+	devState[index] = localState;
+	if(rand < 0.0f)  rand *= -1.0f;
+	if(rand == 0.0f) rand = 1.0f;
 	radius[index] *= rand; // change later
 	//radius[index] *= GROWTH_RATE;
 }
