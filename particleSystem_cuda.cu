@@ -272,8 +272,8 @@ void checkRadius(float *position, float *velocity, float *radius, uint &numParti
 	computeGridSize(numParticles, 64, numBlocks, numThreads);
 	checkDivisionAndDeath<<<numBlocks, numThreads>>>(radius, item, numParticles, minRadius, maxRadius);
 	thrust::exclusive_scan(item, item + numParticles, loc); // check this
-	//applyDivisionAndDeath<<<numBlocks, numThreads>>>((float4 *)position, (float4 *)velocity, radius, numParticles, loc, item, divisionRatio);
-	//numParticles = loc[numParticles - 1] + item[numParticles - 1];
+	applyDivisionAndDeath<<<numBlocks, numThreads>>>((float4 *)position, (float4 *)velocity, radius, numParticles, loc, item, divisionRatio);
+	numParticles = loc[numParticles - 1] + item[numParticles - 1];
 	freeArray(loc);
 	freeArray(item);
 }
