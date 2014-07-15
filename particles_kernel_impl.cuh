@@ -40,17 +40,16 @@ struct integrate_functor
     void operator()(Tuple t)
     {
         volatile float4 posData = thrust::get<0>(t);
-        volatile float4 velData = thrust::get<1>(t);
+        volatile float4 movData = thrust::get<1>(t);
 
         float  rad = thrust::get<2>(t);
         float3 pos = make_float3(posData.x, posData.y, posData.z);
-        float3 vel = make_float3(velData.x, velData.y, velData.z);
+        float3 mov = make_float3(movData.x, movData.y, movData.z);
 
-        vel += params.gravity * deltaTime;
-        vel *= params.globalDamping;
 
-        // new position = old position + velocity * deltaTime
-        pos += vel * deltaTime;
+
+        // new position = old position + movement
+        pos += mov;
 
         // set this to zero to disable collisions with cube sides
 #if 1
@@ -58,31 +57,31 @@ struct integrate_functor
         if (pos.x > 1.0f - rad)
         {
             pos.x = 1.0f - rad;
-            vel.x *= params.boundaryDamping;
+            //mov.x *= params.boundaryDamping;
         }
 
         if (pos.x < -1.0f + rad)
         {
             pos.x = -1.0f + rad;
-            vel.x *= params.boundaryDamping;
+            //mov.x *= params.boundaryDamping;
         }
 
         if (pos.y > 1.0f - rad)
         {
             pos.y = 1.0f - rad;
-            vel.y *= params.boundaryDamping;
+            //mov.y *= params.boundaryDamping;
         }
 
         if (pos.z > 1.0f - rad)
         {
             pos.z = 1.0f - rad;
-            vel.z *= params.boundaryDamping;
+            //mov.z *= params.boundaryDamping;
         }
 
         if (pos.z < -1.0f + rad)
         {
             pos.z = -1.0f + rad;
-            vel.z *= params.boundaryDamping;
+            //mov.z *= params.boundaryDamping;
         }
 
 #endif
@@ -90,12 +89,12 @@ struct integrate_functor
         if (pos.y < -1.0f + rad)
         {
             pos.y = -1.0f + rad;
-            vel.y *= params.boundaryDamping;
+            //mov.y *= params.boundaryDamping;
         }
 
         // store new position and velocity
         thrust::get<0>(t) = make_float4(pos, posData.w);
-        thrust::get<1>(t) = make_float4(vel, velData.w);
+        thrust::get<1>(t) = make_float4(mov, movData.w);
     }
 };
 
@@ -216,8 +215,8 @@ void reorderDataAndFindCellStartD(uint   *cellStart,        // output: cell star
 
 // collide two spheres using DEM method
 __device__
-float3 collideSpheres(float3 posA, float3 posB,
-                      float3 velA, float3 velB,
+void collideSpheres(float3 posA, float3 posB,
+                      float3 &movA, float3 &movB,
                       float radiusA, float radiusB,
                       float attraction)
 {
@@ -227,42 +226,48 @@ float3 collideSpheres(float3 posA, float3 posB,
     float dist = length(relPos);
     float collideDist = radiusA + radiusB;
 
-    float3 force = make_float3(0.0f);
+    float3 movement = make_float3(0.0f);
 
     if (dist < collideDist)
     {
+    	float diff = dist - collideDist;
+    	relPos /= dist; // normalize
+    	movA += relPos * diff / 2.0f;
+    	movB -= relPos * diff / 2.0f;
+    	/*
         float3 norm = relPos / dist;
 
         // relative velocity
-        float3 relVel = velB - velA;
+        float3 relVel = movB - movA;
 
         // relative tangential velocity
         float3 tanVel = relVel - (dot(relVel, norm) * norm);
 
         // spring force
-        force = -params.spring*(collideDist - dist) * norm;
+        movement = -params.spring*(collideDist - dist) * norm;
         // dashpot (damping) force
-        force += params.damping*relVel;
+        movement += params.damping*relVel;
         // tangential shear force
-        force += params.shear*tanVel;
+        movement += params.shear*tanVel;
         // attraction
-        force += attraction*relPos;
+        movement += attraction*relPos;
+        */
     }
 
-    return force;
+    //return movement;
 }
 
 
 
 // collide a particle against all other particles in a given cell
 __device__
-float3 collideCell(int3    gridPos,
+void collideCell(int3    gridPos,
                    uint    index,
                    float3  pos,
-                   float3  vel,
+                   float3  &mov,
                    float   rad,
                    float4 *oldPos,
-                   float4 *oldVel,
+                   float4 *oldMov,
                    float  *oldRad,
                    uint   *cellStart,
                    uint   *cellEnd)
@@ -272,7 +277,7 @@ float3 collideCell(int3    gridPos,
     // get start of bucket for this cell
     uint startIndex = FETCH(cellStart, gridHash);
 
-    float3 force = make_float3(0.0f);
+    //float3 movement = make_float3(0.0f);
 
     if (startIndex != 0xffffffff)          // cell is not empty
     {
@@ -284,27 +289,29 @@ float3 collideCell(int3    gridPos,
             if (j != index)                // check not colliding with self
             {
                 float3 pos2 = make_float3(FETCH(oldPos, j));
-                float3 vel2 = make_float3(FETCH(oldVel, j));
+                float3 mov2 = make_float3(FETCH(oldMov, j)); // movement of the neighbor
                 float  rad2 = FETCH(oldRad, j);
                 // collide two spheres
-                force += collideSpheres(pos, pos2, vel, vel2, rad, rad2, params.attraction);
+                collideSpheres(pos, pos2, mov, mov2, rad, rad2, params.attraction);
+                FETCH(oldMov, j) = make_float4(mov2, FETCH(oldMov, j).w); // store back
             }
         }
     }
 
-    return force;
+    //return movement;
 }
 
 
 __global__
-void collideD(float4 *newVel,               // output: new velocity
+void collideD(float4 *newMov,               // output: new velocity
               float4 *oldPos,               // input: sorted positions
-              float4 *oldVel,               // input: sorted velocities
+              float4 *oldMov,               // input: sorted velocities
               float  *oldRad,
               uint   *gridParticleIndex,    // input: sorted particle indices
               uint   *cellStart,
               uint   *cellEnd,
-              uint    numParticles)
+              uint    numParticles,
+              uint   &numMoving)
 {
     uint index = __mul24(blockIdx.x,blockDim.x) + threadIdx.x;
 
@@ -312,14 +319,14 @@ void collideD(float4 *newVel,               // output: new velocity
 
     // read particle data from sorted arrays
     float3 pos = make_float3(FETCH(oldPos, index));
-    float3 vel = make_float3(FETCH(oldVel, index));
+    float3 mov = make_float3(FETCH(oldMov, index)); // should be zero
     float  rad = FETCH(oldRad, index);
 
     // get address in grid
     int3 gridPos = calcGridPos(pos);
 
     // examine neighbouring cells
-    float3 force = make_float3(0.0f);
+    //float3 movement = make_float3(0.0f);
 
     for (int z=-1; z<=1; z++)
     {
@@ -328,17 +335,23 @@ void collideD(float4 *newVel,               // output: new velocity
             for (int x=-1; x<=1; x++)
             {
                 int3 neighbourPos = gridPos + make_int3(x, y, z);
-                force += collideCell(neighbourPos, index, pos, vel, rad, oldPos, oldVel, oldRad, cellStart, cellEnd);
+                collideCell(neighbourPos, index, pos, mov, rad, oldPos, oldMov, oldRad, cellStart, cellEnd);
             }
         }
     }
 
     // collide with cursor sphere
-    force += collideSpheres(pos, params.colliderPos, vel, make_float3(0.0f, 0.0f, 0.0f), rad, params.colliderRadius, 0.0f);
+    //collideSpheres(pos, params.colliderPos, mov, make_float3(0.0f, 0.0f, 0.0f), rad, params.colliderRadius, 0.0f);
 
+    __syncthreads(); // wait for all threads to complete
     // write new velocity back to original unsorted location
     uint originalIndex = gridParticleIndex[index];
-    newVel[originalIndex] = make_float4(vel + force, 0.0f);
+    float4 movement = make_float4(mov, 0.0f) + FETCH(oldMov, index);
+    newMov[originalIndex] += movement; //
+    if(length(movement) > 0) // if this particle is moved in this iteration
+    {
+    	atomicAdd(&numMoving, 1);
+    }
 }
 
 __global__

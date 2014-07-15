@@ -37,9 +37,9 @@ m_bInitialized(false),
 //m_bUseOpenGL(bUseOpenGL),
 m_numParticles(numParticles),
 m_hPos(0),
-m_hVel(0),
+m_hMov(0),
 m_dPos(0),
-m_dVel(0),
+m_dMov(0),
 m_gridSize(gridSize),
 m_timer(NULL)
 //m_solverIterations(1)
@@ -136,10 +136,10 @@ ParticleSystem::_initialize(int numParticles)
 	memset(m_hVel, 0, MAX_NUM_PARTICLES*4*sizeof(float));
 	 */
 	m_hPos = new float[MAX_NUM_PARTICLES*4];
-	m_hVel = new float[MAX_NUM_PARTICLES*4];
+	m_hMov = new float[MAX_NUM_PARTICLES*4];
 	m_hRad = new float[MAX_NUM_PARTICLES*4];
 	memset(m_hPos, 0, MAX_NUM_PARTICLES*4*sizeof(float));
-	memset(m_hVel, 0, MAX_NUM_PARTICLES*4*sizeof(float));
+	memset(m_hMov, 0, MAX_NUM_PARTICLES*4*sizeof(float));
 	memset(m_hRad, m_params.particleRadius, MAX_NUM_PARTICLES*4*sizeof(float));
 
 	m_hCellStart = new uint[m_numGridCells];
@@ -158,10 +158,10 @@ ParticleSystem::_initialize(int numParticles)
 	m_radiusVBO = createVBO(sizeof(float) * MAX_NUM_PARTICLES);
 	registerGLBufferObject(m_radiusVBO, &m_cuda_radiusvbo_resource);
 
-	allocateArray((void **)&m_dVel, memSize);
+	allocateArray((void **)&m_dMov, memSize);
 
 	allocateArray((void **)&m_dSortedPos, memSize);
-	allocateArray((void **)&m_dSortedVel, memSize);
+	allocateArray((void **)&m_dSortedMov, memSize);
 	allocateArray((void **)&m_dSortedRad, sizeof(float) * MAX_NUM_PARTICLES);
 
 	allocateArray((void **)&m_dGridParticleHash, MAX_NUM_PARTICLES*sizeof(uint));
@@ -219,13 +219,13 @@ ParticleSystem::_finalize()
 	assert(m_bInitialized);
 
 	delete [] m_hPos;
-	delete [] m_hVel;
+	delete [] m_hMov;
 	delete [] m_hCellStart;
 	delete [] m_hCellEnd;
 
-	freeArray(m_dVel);
+	freeArray(m_dMov);
 	freeArray(m_dSortedPos);
-	freeArray(m_dSortedVel);
+	freeArray(m_dSortedMov);
 
 	freeArray(m_dGridParticleHash);
 	freeArray(m_dGridParticleIndex);
@@ -255,18 +255,18 @@ ParticleSystem::update(float deltaTime)
 	// check radius
 
 	float *hPos = getArray(POSITION);
-	float *hVel = getArray(VELOCITY);
+	float *hMov = getArray(MOVEMENT);
 	float *hRad = getArray(RADIUS);
 
 	uint numParticles = checkRadius(
 			hPos,
-			hVel,
+			hMov,
 			hRad,
 			m_numParticles,
 			m_minRadius,
 			m_maxRadius);
 	setArray(POSITION, hPos, 0, MAX_NUM_PARTICLES);
-	setArray(VELOCITY, hVel, 0, MAX_NUM_PARTICLES);
+	setArray(MOVEMENT, hMov, 0, MAX_NUM_PARTICLES);
 	setArray(RADIUS, hRad, 0, MAX_NUM_PARTICLES);
 
 	m_numParticles = numParticles;
@@ -276,13 +276,14 @@ ParticleSystem::update(float deltaTime)
 	dPos = (float *) mapGLBufferObject(&m_cuda_posvbo_resource);
 	dRad = (float *) mapGLBufferObject(&m_cuda_radiusvbo_resource);
 
-	// integrate
+	// integrate: apply movement
 	integrateSystem(
 			dPos,
-			m_dVel,
+			m_dMov,
 			dRad,
 			deltaTime,
 			m_numParticles);
+	cudaMemset((void *) m_dMov, 0, m_numParticles); // reset movement
 
 	// calculate grid hash
 	calcHash(
@@ -300,21 +301,21 @@ ParticleSystem::update(float deltaTime)
 			m_dCellStart,
 			m_dCellEnd,
 			m_dSortedPos,
-			m_dSortedVel,
+			m_dSortedMov,
 			m_dSortedRad,
 			m_dGridParticleHash,
 			m_dGridParticleIndex,
 			dPos,
-			m_dVel,
+			m_dMov,
 			dRad,
 			m_numParticles,
 			m_numGridCells);
 
 	// process collisions
 	collide(
-			m_dVel,
+			m_dMov,
 			m_dSortedPos,
-			m_dSortedVel,
+			m_dSortedMov,
 			m_dSortedRad,
 			m_dGridParticleIndex,
 			m_dCellStart,
@@ -359,13 +360,13 @@ ParticleSystem::dumpParticles(uint start, uint count)
 {
 	// debug
 	copyArrayFromDevice(m_hPos, 0, &m_cuda_posvbo_resource, sizeof(float)*4*count);
-	copyArrayFromDevice(m_hVel, m_dVel, 0, sizeof(float)*4*count);
+	copyArrayFromDevice(m_hMov, m_dMov, 0, sizeof(float)*4*count);
 
 	for (uint i=start; i<start+count; i++)
 	{
 		//        printf("%d: ", i);
 		printf("pos: (%.4f, %.4f, %.4f, %.4f)\n", m_hPos[i*4+0], m_hPos[i*4+1], m_hPos[i*4+2], m_hPos[i*4+3]);
-		printf("vel: (%.4f, %.4f, %.4f, %.4f)\n", m_hVel[i*4+0], m_hVel[i*4+1], m_hVel[i*4+2], m_hVel[i*4+3]);
+		printf("vel: (%.4f, %.4f, %.4f, %.4f)\n", m_hMov[i*4+0], m_hMov[i*4+1], m_hMov[i*4+2], m_hMov[i*4+3]);
 	}
 }
 
@@ -388,9 +389,9 @@ ParticleSystem::getArray(ParticleArray array)
 		copyArrayFromDevice(hdata, ddata, &cuda_vbo_resource, MAX_NUM_PARTICLES*4*sizeof(float));
 		break;
 
-	case VELOCITY:
-		hdata = m_hVel;
-		ddata = m_dVel;
+	case MOVEMENT:
+		hdata = m_hMov;
+		ddata = m_dMov;
 		copyArrayFromDevice(hdata, ddata, &cuda_vbo_resource, MAX_NUM_PARTICLES*4*sizeof(float));
 		break;
 
@@ -426,8 +427,8 @@ ParticleSystem::setArray(ParticleArray array, const float *data, int start, int 
 	}
 	break;
 
-	case VELOCITY:
-		copyArrayToDevice(m_dVel, data, start*4*sizeof(float), count*4*sizeof(float));
+	case MOVEMENT:
+		copyArrayToDevice(m_dMov, data, start*4*sizeof(float), count*4*sizeof(float));
 		break;
 
 
@@ -466,10 +467,10 @@ ParticleSystem::initGrid(uint *size, float spacing, float jitter, uint numPartic
 					m_hPos[i*4+2] = (spacing * z) + m_params.particleRadius - 1.0f + (frand()*2.0f-1.0f)*jitter;
 					m_hPos[i*4+3] = 1.0f;
 
-					m_hVel[i*4] = 0.0f;
-					m_hVel[i*4+1] = 0.0f;
-					m_hVel[i*4+2] = 0.0f;
-					m_hVel[i*4+3] = 0.0f;
+					m_hMov[i*4] = 0.0f;
+					m_hMov[i*4+1] = 0.0f;
+					m_hMov[i*4+2] = 0.0f;
+					m_hMov[i*4+3] = 0.0f;
 
 					m_hRad[i] = m_params.particleRadius;
 				}
@@ -499,10 +500,10 @@ ParticleSystem::reset(ParticleConfig config)
 			m_hPos[p++] = 2 * (point[1] - 0.5f);
 			m_hPos[p++] = 2 * (point[2] - 0.5f);
 			m_hPos[p++] = 1.0f; // radius
-			m_hVel[v++] = 0.0f;
-			m_hVel[v++] = 0.0f;
-			m_hVel[v++] = 0.0f;
-			m_hVel[v++] = 0.0f;
+			m_hMov[v++] = 0.0f;
+			m_hMov[v++] = 0.0f;
+			m_hMov[v++] = 0.0f;
+			m_hMov[v++] = 0.0f;
 			m_hRad[i] = m_params.particleRadius;
 		}
 	}
@@ -520,7 +521,7 @@ ParticleSystem::reset(ParticleConfig config)
 	}
 
 	setArray(POSITION, m_hPos, 0, m_numParticles);
-	setArray(VELOCITY, m_hVel, 0, m_numParticles);
+	setArray(MOVEMENT, m_hMov, 0, m_numParticles);
 	setArray(RADIUS, m_hRad, 0, m_numParticles);
 }
 
@@ -548,10 +549,10 @@ ParticleSystem::addSphere(int start, float *pos, float *vel, int r, float spacin
 					m_hPos[index*4+2] = pos[2] + dz + (frand()*2.0f-1.0f)*jitter;
 					m_hPos[index*4+3] = pos[3];
 
-					m_hVel[index*4]   = vel[0];
-					m_hVel[index*4+1] = vel[1];
-					m_hVel[index*4+2] = vel[2];
-					m_hVel[index*4+3] = vel[3];
+					m_hMov[index*4]   = vel[0];
+					m_hMov[index*4+1] = vel[1];
+					m_hMov[index*4+2] = vel[2];
+					m_hMov[index*4+3] = vel[3];
 
 					m_hRad[index] = m_params.particleRadius;
 					index++;
@@ -561,7 +562,7 @@ ParticleSystem::addSphere(int start, float *pos, float *vel, int r, float spacin
 	}
 
 	setArray(POSITION, m_hPos, start, index);
-	setArray(VELOCITY, m_hVel, start, index);
+	setArray(MOVEMENT, m_hMov, start, index);
 	setArray(RADIUS, m_hRad, start, index);
 }
 

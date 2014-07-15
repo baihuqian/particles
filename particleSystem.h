@@ -37,7 +37,7 @@ class ParticleSystem
         enum ParticleArray
         {
             POSITION,
-            VELOCITY,
+            MOVEMENT,
             RADIUS,
         };
 
@@ -160,7 +160,7 @@ class ParticleSystem
 
         // CPU data
         float *m_hPos;              // particle positions
-        float *m_hVel;              // particle velocities
+        float *m_hMov;              // particle velocities
         float *m_hRad;
 
         uint  *m_hParticleHash;
@@ -169,11 +169,11 @@ class ParticleSystem
 
         // GPU data
         float *m_dPos;
-        float *m_dVel;
+        float *m_dMov;
         float *m_dRad;
 
         float *m_dSortedPos;
-        float *m_dSortedVel;
+        float *m_dSortedMov;
         float *m_dSortedRad;
 
         // grid data for sorting method

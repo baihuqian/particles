@@ -29,7 +29,7 @@ extern "C"
     void setParameters(SimParams *hostParams);
 
     void integrateSystem(float *pos,
-                         float *vel,
+                         float *mov,
                          float *rad,
                          float deltaTime,
                          uint numParticles);

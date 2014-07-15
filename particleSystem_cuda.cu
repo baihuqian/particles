@@ -142,18 +142,18 @@ void computeGridSize(uint n, uint blockSize, uint &numBlocks, uint &numThreads)
 }
 
 void integrateSystem(float *pos,
-		float *vel,
+		float *mov,
 		float *rad,
 		float deltaTime,
 		uint numParticles)
 {
 	thrust::device_ptr<float4> d_pos4((float4 *)pos);
-	thrust::device_ptr<float4> d_vel4((float4 *)vel);
+	thrust::device_ptr<float4> d_mov4((float4 *)mov);
 	thrust::device_ptr<float>  d_rad(rad);
 
 	thrust::for_each(
-			thrust::make_zip_iterator(thrust::make_tuple(d_pos4, d_vel4, d_rad)),
-			thrust::make_zip_iterator(thrust::make_tuple(d_pos4+numParticles, d_vel4+numParticles, d_rad+numParticles)),
+			thrust::make_zip_iterator(thrust::make_tuple(d_pos4, d_mov4, d_rad)),
+			thrust::make_zip_iterator(thrust::make_tuple(d_pos4+numParticles, d_mov4+numParticles, d_rad+numParticles)),
 			integrate_functor(deltaTime));
 }
 
@@ -214,9 +214,9 @@ void reorderDataAndFindCellStart(uint  *cellStart,
 
 }
 
-void collide(float *newVel,
+void collide(float *newMov,
 		float *sortedPos,
-		float *sortedVel,
+		float *sortedMov,
 		float *sortedRad,
 		uint  *gridParticleIndex,
 		uint  *cellStart,
@@ -230,15 +230,21 @@ void collide(float *newVel,
 	uint numThreads, numBlocks;
 	computeGridSize(numParticles, 64, numBlocks, numThreads);
 
+	uint numMoving = 0;
 	// execute the kernel
-	collideD<<< numBlocks, numThreads >>>((float4 *)newVel,
-			(float4 *)sortedPos,
-			(float4 *)sortedVel,
-			sortedRad,
-			gridParticleIndex,
-			cellStart,
-			cellEnd,
-			numParticles);
+	do {
+		numMoving = 0;
+		cudaMemset((void *)sortedMov, 0.0f, numParticles);
+		collideD<<< numBlocks, numThreads >>>((float4 *)newMov,
+				(float4 *)sortedPos,
+				(float4 *)sortedMov,
+				sortedRad,
+				gridParticleIndex,
+				cellStart,
+				cellEnd,
+				numParticles,
+				numMoving);
+	} while(numMoving > 0.05 * numParticles);
 
 	// check if kernel invocation generated an error
 	getLastCudaError("Kernel execution failed");
