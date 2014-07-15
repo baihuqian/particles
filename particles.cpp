@@ -132,13 +132,13 @@ void initParticleSystem(int numParticles, uint3 gridSize)
 	psystem->reset(ParticleSystem::CONFIG_GRID);
 
 
-
+#if DISPLAY
 	renderer = new ParticleRenderer;
 	//renderer->setParticleRadius(psystem->getParticleRadius());
 	renderer->setVertexBuffer(psystem->getCurrentReadBuffer(), psystem->getNumParticles());
 	renderer->setColorBuffer(psystem->getColorBuffer());
     renderer->setRadiusBuffer(psystem->getRadiusBuffer());
-
+#endif
 	sdkCreateTimer(&timer);
 }
 
@@ -147,6 +147,7 @@ void cleanup()
 	sdkDeleteTimer(&timer);
 }
 
+#if DISPLAY
 // initialize OpenGL
 void initGL(int *argc, char **argv)
 {
@@ -276,6 +277,7 @@ void display()
 
 	computeFPS();
 }
+#endif
 
 inline float frand()
 {
@@ -296,6 +298,7 @@ void addSphere()
 	psystem->addSphere(0, pos, vel, ballr, pr*2.0f);
 }
 
+#if DISPLAY
 void reshape(int w, int h)
 {
 	glMatrixMode(GL_PROJECTION);
@@ -311,7 +314,9 @@ void reshape(int w, int h)
 		renderer->setFOV(60.0);
 	}
 }
+#endif
 
+#if DISPLAY
 void mouse(int button, int state, int x, int y)
 {
 	int mods;
@@ -353,6 +358,7 @@ void mouse(int button, int state, int x, int y)
 
 	glutPostRedisplay();
 }
+#endif
 
 // transfrom vector by matrix
 void xform(float *v, float *r, GLfloat *m)
@@ -380,6 +386,7 @@ void ixformPoint(float *v, float *r, GLfloat *m)
 	ixform(x, r, m);
 }
 
+#if DISPLAY
 void motion(int x, int y)
 {
 	float dx, dy;
@@ -461,7 +468,9 @@ void motion(int x, int y)
 
 	glutPostRedisplay();
 }
+#endif
 
+#if DISPLAY
 // commented out to remove unused parameter warnings in Linux
 void key(unsigned char key, int /*x*/, int /*y*/)
 {
@@ -599,6 +608,7 @@ void idle(void)
 	glutPostRedisplay();
 
 }
+#endif
 
 void initParams()
 {
@@ -617,11 +627,14 @@ void initParams()
 
 }
 
+#if DISPLAY
 void mainMenu(int i)
 {
 	key((unsigned char) i, 0, 0);
 }
+#endif
 
+#if DISPLAY
 void initMenus()
 {
 	glutCreateMenu(mainMenu);
@@ -637,7 +650,7 @@ void initMenus()
 	glutAddMenuEntry("Quit (esc)", '\033');
 	glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
-
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 // Program main
 ////////////////////////////////////////////////////////////////////////////////
@@ -687,17 +700,20 @@ main(int argc, char **argv)
 		exit(EXIT_SUCCESS);
 	}
 */
+#if DISPLAY
 	initGL(&argc, argv);
+#endif
 	cudaGLInit(argc, argv);
 
 
 	initParticleSystem(numParticles, gridSize);
 	initParams();
 
-
+#if DISPLAY
 	initMenus();
+#endif
 
-
+#if DISPLAY
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
 	glutMouseFunc(mouse);
@@ -709,7 +725,12 @@ main(int argc, char **argv)
 	glutCloseFunc(cleanup);
 
 	glutMainLoop();
-
+#else
+	while(1)
+	{
+		psystem->update(1);
+	}
+#endif
 
 	if (psystem)
 	{

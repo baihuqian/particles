@@ -51,7 +51,7 @@ class ParticleSystem
         {
             return m_numParticles;
         }
-
+#if DISPLAY
         unsigned int getCurrentReadBuffer() const
         {
             return m_posVbo;
@@ -73,7 +73,8 @@ class ParticleSystem
         {
             return (void *)m_cudaColorVBO;
         }
-
+#else
+#endif
         void dumpGrid();
         void dumpParticles(uint start, uint count);
 /*
@@ -147,7 +148,9 @@ class ParticleSystem
 
     protected: // methods
         ParticleSystem() {}
+#if DISPLAY
         uint createVBO(uint size);
+#endif
 
         void _initialize(int numParticles);
         void _finalize();
@@ -183,11 +186,11 @@ class ParticleSystem
         uint  *m_dCellEnd;          // index of end of cell
 
         uint   m_gridSortBits;
-
+#if DISPLAY
         uint   m_posVbo;            // vertex buffer object for particle positions
         uint   m_colorVBO;          // vertex buffer object for colors
         uint   m_radiusVBO;			// vertex buffer object for radii
-
+#endif
         float *m_cudaPosVBO;        // these are the CUDA deviceMem Pos
         float *m_cudaColorVBO;      // these are the CUDA deviceMem Color
 

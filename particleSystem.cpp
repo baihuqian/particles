@@ -24,7 +24,9 @@
 #include <cstdio>
 #include <cstdlib>
 #include <algorithm>
+#if DISPLAY
 #include <GL/glew.h>
+#endif
 #include <cmath>
 
 #include "constant.h"
@@ -82,7 +84,7 @@ ParticleSystem::~ParticleSystem()
 	_finalize();
 	m_numParticles = 0;
 }
-
+#if DISPLAY
 uint
 ParticleSystem::createVBO(uint size)
 {
@@ -93,6 +95,7 @@ ParticleSystem::createVBO(uint size)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	return vbo;
 }
+#endif
 
 inline float lerp(float a, float b, float t)
 {
@@ -151,13 +154,16 @@ ParticleSystem::_initialize(int numParticles)
 	// allocate GPU data
 	unsigned int memSize = sizeof(float) * 4 * MAX_NUM_PARTICLES;
 
-
+#if DISPLAY
 	m_posVbo = createVBO(memSize);
 	registerGLBufferObject(m_posVbo, &m_cuda_posvbo_resource);
 
 	m_radiusVBO = createVBO(sizeof(float) * MAX_NUM_PARTICLES);
 	registerGLBufferObject(m_radiusVBO, &m_cuda_radiusvbo_resource);
-
+#else
+	allocateArray((void **)&m_dPos, memSize);
+	allocateArray((void **)&m_dRad, sizeof(float) * MAX_NUM_PARTICLES);
+#endif
 	allocateArray((void **)&m_dVel, memSize);
 
 	allocateArray((void **)&m_dSortedPos, memSize);
@@ -170,13 +176,15 @@ ParticleSystem::_initialize(int numParticles)
 	allocateArray((void **)&m_dCellStart, m_numGridCells*sizeof(uint));
 	allocateArray((void **)&m_dCellEnd, m_numGridCells*sizeof(uint));
 
-
+#if DISPLAY
 	m_colorVBO = createVBO(memSize);
 	registerGLBufferObject(m_colorVBO, &m_cuda_colorvbo_resource);
 
 	// fill color buffer
+
 	glBindBufferARB(GL_ARRAY_BUFFER, m_colorVBO);
 	float *data = (float *) glMapBufferARB(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+
 	float *ptr = data;
 
 	for (uint i=0; i<MAX_NUM_PARTICLES; i++)
@@ -201,7 +209,7 @@ ParticleSystem::_initialize(int numParticles)
 	}
 
 	glUnmapBufferARB(GL_ARRAY_BUFFER);
-
+#endif
 	sdkCreateTimer(&m_timer);
 
 	setParameters(&m_params);
@@ -232,13 +240,17 @@ ParticleSystem::_finalize()
 	freeArray(m_dCellStart);
 	freeArray(m_dCellEnd);
 
-
+#if DISPLAY
 	unregisterGLBufferObject(m_cuda_posvbo_resource);
 	unregisterGLBufferObject(m_cuda_radiusvbo_resource);
 	unregisterGLBufferObject(m_cuda_colorvbo_resource);
 	glDeleteBuffers(1, (const GLuint *)&m_posVbo);
 	glDeleteBuffers(1, (const GLuint *)&m_colorVBO);
 	glDeleteBuffers(1, (const GLuint *)&m_radiusVBO);
+#else
+	freeArray(m_dPos);
+	freeArray(m_dRad);
+#endif
 
 }
 
@@ -272,10 +284,13 @@ ParticleSystem::update(float deltaTime)
 	m_numParticles = numParticles;
 
 	float *dPos, *dRad;
-
+#if DISPLAY
 	dPos = (float *) mapGLBufferObject(&m_cuda_posvbo_resource);
 	dRad = (float *) mapGLBufferObject(&m_cuda_radiusvbo_resource);
-
+#else
+	dPos = m_dPos;
+	dRad = m_dRad;
+#endif
 	// integrate
 	integrateSystem(
 			dPos,
@@ -324,9 +339,10 @@ ParticleSystem::update(float deltaTime)
 
 	changeRadius(dRad, m_numParticles);
 	// note: do unmap at end here to avoid unnecessary graphics/CUDA context switch
-
+#if DISPLAY
 	unmapGLBufferObject(m_cuda_posvbo_resource);
 	unmapGLBufferObject(m_cuda_radiusvbo_resource);
+#endif
 }
 
 void
@@ -384,7 +400,9 @@ ParticleSystem::getArray(ParticleArray array)
 	case POSITION:
 		hdata = m_hPos;
 		ddata = m_dPos;
+#if DISPLAY
 		cuda_vbo_resource = m_cuda_posvbo_resource;
+#endif
 		copyArrayFromDevice(hdata, ddata, &cuda_vbo_resource, MAX_NUM_PARTICLES*4*sizeof(float));
 		break;
 
@@ -397,7 +415,9 @@ ParticleSystem::getArray(ParticleArray array)
 	case RADIUS:
 		hdata = m_hRad;
 		ddata = m_dRad;
+#if DISPLAY
 		cuda_vbo_resource = m_cuda_radiusvbo_resource;
+#endif
 		copyArrayFromDevice(hdata, ddata, &cuda_vbo_resource, MAX_NUM_PARTICLES*sizeof(float));
 		break;
 	}
@@ -416,15 +436,18 @@ ParticleSystem::setArray(ParticleArray array, const float *data, int start, int 
 	default:
 	case POSITION:
 	{
-
+#if DISPLAY
 		unregisterGLBufferObject(m_cuda_posvbo_resource);
 		glBindBuffer(GL_ARRAY_BUFFER, m_posVbo);
 		glBufferSubData(GL_ARRAY_BUFFER, start*4*sizeof(float), count*4*sizeof(float), data);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		registerGLBufferObject(m_posVbo, &m_cuda_posvbo_resource);
-
+#else
+		copyArrayToDevice(m_dPos, data, start*4*sizeof(float), count*4*sizeof(float));
+#endif
+		break;
 	}
-	break;
+
 
 	case VELOCITY:
 		copyArrayToDevice(m_dVel, data, start*4*sizeof(float), count*4*sizeof(float));
@@ -432,11 +455,16 @@ ParticleSystem::setArray(ParticleArray array, const float *data, int start, int 
 
 
 	case RADIUS:
+#if DISPLAY
 		unregisterGLBufferObject(m_cuda_radiusvbo_resource);
 		glBindBuffer(GL_ARRAY_BUFFER, m_radiusVBO);
 		glBufferSubData(GL_ARRAY_BUFFER, start*sizeof(float), count*sizeof(float), data);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		registerGLBufferObject(m_radiusVBO, &m_cuda_radiusvbo_resource);
+
+#else
+		copyArrayToDevice(m_dRad, data, start*sizeof(float), count*sizeof(float));
+#endif
 		break;
 	}
 }
