@@ -6,5 +6,5 @@
 #define CUDART_PI_F     	3.141592654f
 #define GROWTH_RATE 		1.001
 #define INIT_RADIUS 		1.0f / 160.0f
-
+#define DISPLAY				0
 #endif

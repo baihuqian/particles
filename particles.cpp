@@ -21,6 +21,7 @@
  */
 
 // OpenGL Graphics includes
+#if DISPLAY
 #include <GL/glew.h>
 #if defined (WIN32)
 #include <GL/wglew.h>
@@ -33,7 +34,7 @@
 #else
 #include <GL/freeglut.h>
 #endif
-
+#endif
 // CUDA runtime
 #include <cuda_runtime.h>
 
@@ -59,7 +60,7 @@
 #define NUM_PARTICLES   16384
 
 const uint width = 640, height = 480;
-
+#if DISPLAY
 // view params
 int ox, oy;
 int buttonState = 0;
@@ -81,6 +82,7 @@ int demoCounter = 0;
 const int idleDelay = 2000;
 
 enum { M_VIEW = 0, M_MOVE };
+#endif
 
 uint numParticles = 0;
 uint3 gridSize;
